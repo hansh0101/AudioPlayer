@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AudioPlayer</string>
+    <string name="state_play">재생 중</string>
+    <string name="state_stop">정지</string>
 </resources>
