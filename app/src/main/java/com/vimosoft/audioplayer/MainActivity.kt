@@ -9,7 +9,9 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
     // 음악 재생을 위한 변수
-    private val mediaPlayer = MediaPlayer()
+    private val mediaPlayer = MediaPlayer().apply {
+        setOnCompletionListener { reset() }
+    }
 
     // ---------------------------------------------------------------------------------------------
     // UI 바인딩 객체 변수
