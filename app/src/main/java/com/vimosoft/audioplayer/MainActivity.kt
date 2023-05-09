@@ -2,9 +2,9 @@ package com.vimosoft.audioplayer
 
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.vimosoft.audioplayer.databinding.ActivityMainBinding
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 prepare()
                 start()
             }
-        }.onFailure { Log.e("playMusic()", it.toString()) }
+        }.onFailure { Timber.e(it) }
     }
 
     private fun stopMusic() {
