@@ -5,7 +5,11 @@ import android.content.res.AssetFileDescriptor
 import android.media.*
 import timber.log.Timber
 
-class AudioThread(private val context: Context, private val fileName: String) : Thread() {
+class AudioThread(
+    private val context: Context,
+    isSeekInUi: Boolean = false,
+    playbackPositionInUi: Long = 0L
+) : Thread() {
     // ---------------------------------------------------------------------------------------------
     // AudioThread 동작에 필요한 MediaCodec, MediaExtractor, AudioTrack 변수들
     private var audioTrack: AudioTrack? = null
@@ -15,8 +19,9 @@ class AudioThread(private val context: Context, private val fileName: String) : 
     // ---------------------------------------------------------------------------------------------
     // Audio 재생 컨트롤에 관한 변수들
     private lateinit var assetFileDescriptor: AssetFileDescriptor
-    var isSeek = false
-    var playbackPosition = 0L
+    var isSeek = isSeekInUi
+    var playbackPosition = playbackPositionInUi
+    var duration = 0L
 
     // ---------------------------------------------------------------------------------------------
     // Thread의 동작을 정의한다.
@@ -30,7 +35,7 @@ class AudioThread(private val context: Context, private val fileName: String) : 
         Timber.tag(TAG).i("2 - 오디오 재생 시작")
 
         // 3 - MediaExtractor 객체 생성
-        assetFileDescriptor = context.assets.openFd(fileName)
+        assetFileDescriptor = context.assets.openFd(FILE_NAME)
         configureMediaExtractor()
         Timber.tag(TAG).i("3 - MediaExtractor 객체 구성")
 
@@ -96,6 +101,8 @@ class AudioThread(private val context: Context, private val fileName: String) : 
             ?: error("Error occurred when get track format from extractor.")
         val mime = format.getString(MediaFormat.KEY_MIME)
             ?: error("Error occured when get MIME from track format.")
+        duration = format.getLong(MediaFormat.KEY_DURATION)
+        extractor?.selectTrack(0)
 
         codec = MediaCodec.createDecoderByType(mime).apply {
             configure(format, null, null, 0)
@@ -107,9 +114,6 @@ class AudioThread(private val context: Context, private val fileName: String) : 
     // 5 - MediaCodec을 통해 음원 디코딩을 처리하고 AudioTrack을 통해 음원을 재생한다.
     private fun decodeAndPlay() {
         if (audioTrack == null || extractor == null || codec == null) {
-            Timber.tag(TAG).i("Is audioTrack null? : ${audioTrack == null}")
-            Timber.tag(TAG).i("Is extractor null? : ${extractor == null}")
-            Timber.tag(TAG).i("Is codec null? : ${codec == null}")
             return
         }
 
@@ -122,8 +126,6 @@ class AudioThread(private val context: Context, private val fileName: String) : 
         // 반복문을 통해 inputBuffer를 읽고 outputBuffer를 통해 쓴다.
         while (!isReachedInputEOS && noOutputCount < noOutputCountLimit && !isInterrupted) {
             noOutputCount++
-
-            Timber.tag(TAG).i("재생 중")
 
             if (isSeek) {
                 extractor!!.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
@@ -168,19 +170,19 @@ class AudioThread(private val context: Context, private val fileName: String) : 
                 if (chunk.isNotEmpty()) {
                     audioTrack!!.write(chunk, 0, chunk.size)
                 }
+
+                codec!!.releaseOutputBuffer(outputBufferIndex, false)
             }
 
             // playbackPosition 갱신
             playbackPosition = extractor!!.sampleTime
         }
-        Timber.tag(TAG).i("isReachedInputEOS? : $isReachedInputEOS")
-        Timber.tag(TAG).i("noOutputCount? : $noOutputCount")
-        Timber.tag(TAG).i("isInterrupted? : $isInterrupted")
     }
 
 
     companion object {
         private const val TAG = "AudioThread"
         private const val SAMPLE_RATE = 88200
+        private const val FILE_NAME = "music.mp3"
     }
 }
