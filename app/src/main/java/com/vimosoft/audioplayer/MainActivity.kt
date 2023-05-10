@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         if (audioThread?.isAlive == true) {
             audioThread?.interrupt()
             audioThread = null
+            handler.removeCallbacks(updateSeekBarRunnable)
         }
     }
 
