@@ -2,14 +2,34 @@ package com.vimosoft.audioplayer
 
 import android.media.*
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
 import com.vimosoft.audioplayer.databinding.ActivityMainBinding
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
-    // 음악 재생을 위한 Thread
+    // 음악 재생을 위한 변수들
     private var audioThread: Thread? = null
+    private var isSeek = false
+
+    // ---------------------------------------------------------------------------------------------
+    // UI 조작을 위한 변수들
+    @Volatile
+    private var playbackPosition = 0L
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateSeekBarRunnable = object : Runnable {
+        override fun run() {
+            Timber.tag("playbackPosition").i(playbackPosition.toString())
+            if (audioThread?.isAlive == true) {
+                binding.seekBar.progress = (playbackPosition / 1000 / 1000).toInt()
+            }
+            handler.postDelayed(this, 1000)
+        }
+    }
 
     // ---------------------------------------------------------------------------------------------
     // UI 바인딩 객체 변수
@@ -30,17 +50,36 @@ class MainActivity : AppCompatActivity() {
         binding.run {
             buttonPlay.setOnClickListener { playMusic() }
             buttonStop.setOnClickListener { stopMusic() }
+            seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                    if (fromUser){
+                        isSeek = true
+                        playbackPosition = (progress * 1000 * 1000).toLong()
+                    }
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    stopMusic()
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar) {}
+            })
         }
     }
 
     private fun playMusic() {
-        audioThread = configureThread()
-        audioThread?.start()
+        if (audioThread?.isAlive != true) {
+            audioThread = configureThread()
+            audioThread?.start()
+            handler.post(updateSeekBarRunnable)
+        }
     }
 
     private fun stopMusic() {
-        audioThread?.interrupt()
-        audioThread = null
+        if (audioThread?.isAlive == true) {
+            audioThread?.interrupt()
+            audioThread = null
+        }
     }
 
     private fun configureThread(): Thread {
@@ -124,10 +163,10 @@ class MainActivity : AppCompatActivity() {
         while (!sawInputEOS && noOutputCounter < noOutputCounterLimit && !Thread.currentThread().isInterrupted) {
             noOutputCounter++
 
-//            if (isSeek) {
-//                extractor.seekTo(seekTime * 1000 * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
-//                isSeek = false
-//            }
+            if (isSeek) {
+                extractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+                isSeek = false
+            }
 
             // -------------------------------------------------------------------------------------
             // 이 과정에 대한 이해 필요
@@ -179,10 +218,8 @@ class MainActivity : AppCompatActivity() {
                 mediaCodec.releaseOutputBuffer(outputBufferIndex, false)
             }
 
-            // 현재 SampleTime을 기반으로 SeekBar 업데이트
-            runOnUiThread {
-                binding.seekBar.progress = (extractor.sampleTime / 1000 / 1000).toInt()
-            }
+            // playbackPosition 갱신
+            playbackPosition =  extractor.sampleTime
         }
     }
 
