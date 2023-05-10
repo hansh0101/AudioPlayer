@@ -8,13 +8,8 @@ import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
-    // 음악 재생을 위한 변수
-    private val streamType = AudioManager.STREAM_MUSIC
-    private val sampleRateInHz = 88200
-    private val channelConfig = AudioFormat.CHANNEL_OUT_MONO
-    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
-    private val bufferSizeInBytes =
-        AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
+    // 음악 재생을 위한 Thread
+    private var audioThread: Thread? = null
 
     // ---------------------------------------------------------------------------------------------
     // UI 바인딩 객체 변수
@@ -30,11 +25,6 @@ class MainActivity : AppCompatActivity() {
         initEventListener()
     }
 
-    override fun onResume() {
-        super.onResume()
-        playMusicByAudioTrack()
-    }
-
     // 이벤트 리스너 등록.
     private fun initEventListener() {
         binding.run {
@@ -44,158 +34,156 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun playMusic() {
-
+        audioThread = configureThread()
+        audioThread?.start()
     }
 
     private fun stopMusic() {
-
+        audioThread?.interrupt()
+        audioThread = null
     }
 
-    private fun playMusicByAudioTrack() {
-        Thread {
-            Timber.tag("playMusicByAudioTrack()").i("called")
-
+    private fun configureThread(): Thread {
+        return Thread {
             // 1 - AudioTrack 인스턴스 생성
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build()
-
-            val audioFormat = AudioFormat.Builder()
-                .setChannelMask(channelConfig)
-                .setEncoding(audioFormat)
-                .setSampleRate(sampleRateInHz)
-                .build()
-
-            val audioTrack = AudioTrack.Builder()
-                .setAudioAttributes(audioAttributes)
-                .setAudioFormat(audioFormat)
-                .setBufferSizeInBytes(bufferSizeInBytes)
-                .build()
-
-            // 1 - Logging
+            val audioTrack: AudioTrack = createAudioTrack()
             Timber.tag("playMusicByAudioTrack()").i("AudioTrack 인스턴스 생성")
 
             // 2 - 오디오 재생 시작
             audioTrack.play()
-
-            // 2 - Logging
             Timber.tag("playMusicByAudioTrack()").i("오디오 재생 시작")
 
             // 3 - AudioTrack에 오디오 데이터 쓰기
-            // 3 - 여기 부분을 다시 작성해야 함
-            // AudioTrack에 바로 넣어서 재생할 수 있는 파일은 압축되지 않은 파일만 가능함
-            // 따라서 MediaCodec을 활용해 압축 해제하는 과정 필요
-
-            val extractor = MediaExtractor().apply {
-                setDataSource(assets.openFd(FILE_NAME))
-            }
-
-            val format = extractor.getTrackFormat(0)
-            val mime = format.getString(MediaFormat.KEY_MIME) ?: error("MIME null")
-            val duration = format.getLong(MediaFormat.KEY_DURATION)
-            val totalSec = (duration / 1000 / 1000).toInt()
-            val min = totalSec / 60
-            val sec = totalSec % 60
-
-            Timber.tag("Time = ").i("${min}:${sec}")
-            Timber.tag("Duration = ").i("$duration")
-
-            val mediaCodec = MediaCodec.createDecoderByType(mime).apply {
-                configure(format, null, null, 0)
-                start()
-            }
-
-            val codecInputBuffers = mediaCodec.inputBuffers
-            val codecOutputBuffers = mediaCodec.outputBuffers
-
-            val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-
-            Timber.tag("mime = ").i(mime)
-            Timber.tag("sampleRate = ").i(sampleRate.toString())
-
-            extractor.selectTrack(0)
-
-            val timeOutUs = 10000L
-            val info = MediaCodec.BufferInfo()
-            var sawInputEOS = false
-            var noOutputCounter = 0
-            val noOutputCounterLimit = 50
-
-            while (!sawInputEOS && noOutputCounter < noOutputCounterLimit) {
-                noOutputCounter++
-
-//                    if (isSeek) {
-//                        extractor.seekTo(seekTime * 1000 * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
-//                        isSeek = false
-//                    }
-
-                val inputBufIndex = mediaCodec.dequeueInputBuffer(timeOutUs)
-                if (inputBufIndex >= 0) {
-                    val dstBuf = codecInputBuffers[inputBufIndex]
-                    var sampleSize = extractor.readSampleData(dstBuf, 0)
-                    var presentationTimeUs = 0L
-
-                    if (sampleSize < 0) {
-                        Timber.i("saw input EOS.")
-                        sawInputEOS = true
-                        sampleSize = 0
-                    } else {
-                        presentationTimeUs = extractor.sampleTime
-                        Timber.tag("presentationTime = ")
-                            .i((presentationTimeUs / 1000 / 1000).toString())
-                    }
-
-                    mediaCodec.queueInputBuffer(
-                        inputBufIndex,
-                        0,
-                        sampleSize,
-                        presentationTimeUs,
-                        if (sawInputEOS) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
-                    )
-
-                    if (!sawInputEOS) {
-                        extractor.advance()
-                    }
-                } else {
-                    Timber.tag("inputBufIndex = ").e(inputBufIndex.toString())
-                }
-
-                val res = mediaCodec.dequeueOutputBuffer(info, timeOutUs)
-                if (res >= 0) {
-                    if (info.size > 0) {
-                        noOutputCounter = 0
-                    }
-
-                    val outputBufIndex = res
-                    val buf = codecOutputBuffers[outputBufIndex]
-                    val chunk = ByteArray(info.size)
-                    buf.get(chunk)
-                    buf.clear()
-
-                    if (chunk.isNotEmpty()) {
-                        audioTrack.write(chunk, 0, chunk.size)
-                    }
-
-                    mediaCodec.releaseOutputBuffer(outputBufIndex, false)
-                }
-            }
-
-            // 3 - Logging
+            writeDataIntoAudioTrack(audioTrack)
             Timber.tag("playMusicByAudioTrack()").i("AudioTrack에 오디오 데이터 쓰기")
 
             // 4 - 오디오 재생 중지
             audioTrack.stop()
-
-            // 4 - Logging
             Timber.tag("playMusicByAudioTrack()").i("오디오 재생 중지")
 
             // 5 - AudioTrack에서 사용하는 리소스 해제
             audioTrack.release()
-
-            // 5 - Logging
             Timber.tag("playMusicByAudioTrack()").i("AudioTrack에서 사용하는 리소스 해제")
-        }.start()
+        }
+    }
+
+    private fun createAudioTrack(): AudioTrack {
+        val sampleRateInHz = 88200
+        val channelConfig = AudioFormat.CHANNEL_OUT_MONO
+        val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
+        val bufferSizeInBytes =
+            AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
+
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
+
+        val audioFormat = AudioFormat.Builder()
+            .setChannelMask(channelConfig)
+            .setEncoding(audioEncodingFormat)
+            .setSampleRate(sampleRateInHz)
+            .build()
+
+        return AudioTrack.Builder()
+            .setAudioAttributes(audioAttributes)
+            .setAudioFormat(audioFormat)
+            .setBufferSizeInBytes(bufferSizeInBytes)
+            .build()
+    }
+
+    private fun writeDataIntoAudioTrack(audioTrack: AudioTrack) {
+        // Extractor 초기화 및 format, mime, duration 정보 액세스
+        val extractor = MediaExtractor().apply {
+            setDataSource(assets.openFd(FILE_NAME))
+        }
+        val format = extractor.getTrackFormat(0)
+        val mime = format.getString(MediaFormat.KEY_MIME) ?: error("MIME null")
+        val duration = format.getLong(MediaFormat.KEY_DURATION)
+        val totalSec = (duration / 1000 / 1000).toInt()
+        extractor.selectTrack(0)
+
+        // Duration을 기반으로 SeekBar의 max 값 설정
+        runOnUiThread { binding.seekBar.max = totalSec }
+
+        // MediaCodec 객체 초기화 및 버퍼 설정
+        val mediaCodec = MediaCodec.createDecoderByType(mime).apply {
+            configure(format, null, null, 0)
+            start()
+        }
+        val codecInputBuffers = mediaCodec.inputBuffers
+        val codecOutputBuffers = mediaCodec.outputBuffers
+
+        val timeOutUs = 10000L
+        val bufferInfo = MediaCodec.BufferInfo()
+        var sawInputEOS = false
+        var noOutputCounter = 0
+        val noOutputCounterLimit = 50
+
+        // MediaCodec을 통한 디코딩 및 음원 재생
+        while (!sawInputEOS && noOutputCounter < noOutputCounterLimit && !Thread.currentThread().isInterrupted) {
+            noOutputCounter++
+
+//            if (isSeek) {
+//                extractor.seekTo(seekTime * 1000 * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+//                isSeek = false
+//            }
+
+            // -------------------------------------------------------------------------------------
+            // 이 과정에 대한 이해 필요
+            val inputBufferIndex = mediaCodec.dequeueInputBuffer(timeOutUs)
+            if (inputBufferIndex >= 0) {
+                val buffer = codecInputBuffers[inputBufferIndex]
+                var sampleSize = extractor.readSampleData(buffer, 0)
+                var presentationTimeUs = 0L
+
+                if (sampleSize < 0) {
+                    sawInputEOS = true
+                    sampleSize = 0
+                } else {
+                    presentationTimeUs = extractor.sampleTime
+                }
+
+                mediaCodec.queueInputBuffer(
+                    inputBufferIndex,
+                    0,
+                    sampleSize,
+                    presentationTimeUs,
+                    if (sawInputEOS) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
+                )
+
+                if (!sawInputEOS) {
+                    extractor.advance()
+                }
+            } else {
+                Timber.tag("inputBufIndex = ").e(inputBufferIndex.toString())
+            }
+
+            // -------------------------------------------------------------------------------------
+            // 이 과정에 대한 이해 필요
+            val outputBufferIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, timeOutUs)
+            if (outputBufferIndex >= 0) {
+                if (bufferInfo.size > 0) {
+                    noOutputCounter = 0
+                }
+
+                val buffer = codecOutputBuffers[outputBufferIndex]
+                val chunk = ByteArray(bufferInfo.size)
+                buffer.get(chunk)
+                buffer.clear()
+
+                if (chunk.isNotEmpty()) {
+                    audioTrack.write(chunk, 0, chunk.size)
+                }
+
+                mediaCodec.releaseOutputBuffer(outputBufferIndex, false)
+            }
+
+            // 현재 SampleTime을 기반으로 SeekBar 업데이트
+            runOnUiThread {
+                binding.seekBar.progress = (extractor.sampleTime / 1000 / 1000).toInt()
+            }
+        }
     }
 
     companion object {
