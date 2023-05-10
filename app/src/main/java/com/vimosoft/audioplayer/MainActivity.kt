@@ -16,11 +16,6 @@ class MainActivity : AppCompatActivity() {
     private val bufferSizeInBytes =
         AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
 
-//    MediaPlayer 객체
-//    private val mediaPlayer = MediaPlayer().apply {
-//        setOnCompletionListener { reset() }
-//    }
-
     // ---------------------------------------------------------------------------------------------
     // UI 바인딩 객체 변수
     private lateinit var binding: ActivityMainBinding
@@ -49,28 +44,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun playMusic() {
-//        MediaPlayer를 사용한 음악 재생
-//        if (mediaPlayer.isPlaying) return
-//
-//        runCatching {
-//            val assetFd = assets.openFd(FILE_NAME)
-//            mediaPlayer.setDataSource(assetFd.fileDescriptor, assetFd.startOffset, assetFd.length)
-//            assetFd.close()
-//            mediaPlayer.run {
-//                prepare()
-//                start()
-//            }
-//        }.onFailure { Timber.e(it) }
+
     }
 
     private fun stopMusic() {
-//        MediaPlayer를 사용한 음악 재생 중지
-//        if (!mediaPlayer.isPlaying) return
-//
-//        mediaPlayer.run {
-//            stop()
-//            reset()
-//        }
+
     }
 
     private fun playMusicByAudioTrack() {
