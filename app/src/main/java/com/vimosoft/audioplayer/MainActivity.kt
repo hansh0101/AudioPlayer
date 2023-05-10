@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
             audioThread = configureThread()
             audioThread?.start()
             handler.post(updateSeekBarRunnable)
+
+            binding.textPlayerState.text = getString(R.string.state_play)
         }
     }
 
@@ -80,6 +82,8 @@ class MainActivity : AppCompatActivity() {
             audioThread?.interrupt()
             audioThread = null
             handler.removeCallbacks(updateSeekBarRunnable)
+
+            binding.textPlayerState.text = getString(R.string.state_stop)
         }
     }
 
