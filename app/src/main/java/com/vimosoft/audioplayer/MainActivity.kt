@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             buttonStop.setOnClickListener { stopMusic() }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    if (fromUser){
+                    if (fromUser) {
                         isSeek = true
                         playbackPosition = (progress * 1000 * 1000).toLong()
                     }
@@ -150,8 +150,6 @@ class MainActivity : AppCompatActivity() {
             configure(format, null, null, 0)
             start()
         }
-        val codecInputBuffers = mediaCodec.inputBuffers
-        val codecOutputBuffers = mediaCodec.outputBuffers
 
         val timeOutUs = 10000L
         val bufferInfo = MediaCodec.BufferInfo()
@@ -172,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             // 이 과정에 대한 이해 필요
             val inputBufferIndex = mediaCodec.dequeueInputBuffer(timeOutUs)
             if (inputBufferIndex >= 0) {
-                val buffer = codecInputBuffers[inputBufferIndex]
+                val buffer = mediaCodec.getInputBuffer(inputBufferIndex) ?: break
                 var sampleSize = extractor.readSampleData(buffer, 0)
                 var presentationTimeUs = 0L
 
@@ -205,11 +203,10 @@ class MainActivity : AppCompatActivity() {
                 if (bufferInfo.size > 0) {
                     noOutputCounter = 0
                 }
-
-                val buffer = codecOutputBuffers[outputBufferIndex]
+                val buffer = mediaCodec.getOutputBuffer(outputBufferIndex)
                 val chunk = ByteArray(bufferInfo.size)
-                buffer.get(chunk)
-                buffer.clear()
+                buffer?.get(chunk)
+                buffer?.clear()
 
                 if (chunk.isNotEmpty()) {
                     audioTrack.write(chunk, 0, chunk.size)
@@ -219,7 +216,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // playbackPosition 갱신
-            playbackPosition =  extractor.sampleTime
+            playbackPosition = extractor.sampleTime
         }
     }
 
