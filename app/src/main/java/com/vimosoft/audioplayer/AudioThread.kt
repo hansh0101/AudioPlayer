@@ -138,8 +138,8 @@ class AudioThread(
             // InputBuffer 처리
             val inputBufferIndex = codec!!.dequeueInputBuffer(timeOutUs)
             if (inputBufferIndex >= 0) {
-                val buffer = codec!!.getInputBuffer(inputBufferIndex) ?: break
-                var sampleSize = extractor!!.readSampleData(buffer, 0)
+                val destinationBuffer = codec!!.getInputBuffer(inputBufferIndex) ?: break
+                var sampleSize = extractor!!.readSampleData(destinationBuffer, 0)
                 var currentTimeUs = 0L
                 var flag = 0
 
