@@ -89,9 +89,12 @@ class AudioThread(
     // ---------------------------------------------------------------------------------------------
     // 3 - AudioTrack 객체를 생성한다.
     private fun configureAudioTrack() {
-        if ((extractor?.trackCount ?: 0) > 0) {
-            val format = extractor?.getTrackFormat(0)
-                ?: error("Error occurred when get track format from extractor.")
+        if (extractor == null) {
+            return
+        }
+
+        if ((extractor!!.trackCount) > 0) {
+            val format = extractor!!.getTrackFormat(0)
             duration = format.getLong(MediaFormat.KEY_DURATION)
 
             val sampleRateInHz = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
@@ -101,6 +104,7 @@ class AudioThread(
                 else -> AudioFormat.CHANNEL_OUT_MONO
             }
             val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
+
             val bufferSizeInBytes =
                 AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
 
