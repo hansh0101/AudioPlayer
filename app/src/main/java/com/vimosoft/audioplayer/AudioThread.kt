@@ -64,7 +64,7 @@ class AudioThread(
     // 1 - AudioTrack 객체를 생성한다.
     private fun configureAudioTrack() {
         val sampleRateInHz = SAMPLE_RATE
-        val channelConfig = AudioFormat.CHANNEL_OUT_MONO
+        val channelConfig = AudioFormat.CHANNEL_OUT_STEREO
         val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
         val bufferSizeInBytes =
             AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
