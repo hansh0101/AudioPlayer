@@ -29,13 +29,13 @@ class AudioThread(
         configureMediaExtractor()
         Timber.tag(TAG).i("1 - MediaExtractor 객체 구성")
 
-        // 2 - AudioTrack 객체 생성
-        configureAudioTrack()
-        Timber.tag(TAG).i("2 - AudioTrack 객체 구성")
-
-        // 3 - MediaCodec 객체 생성
+        // 2 - MediaCodec 객체 생성
         configureMediaCodec()
-        Timber.tag(TAG).i("3 - MediaCodec 객체 구성")
+        Timber.tag(TAG).i("2 - MediaCodec 객체 구성")
+
+        // 3 - AudioTrack 객체 생성
+        configureAudioTrack()
+        Timber.tag(TAG).i("3 - AudioTrack 객체 구성")
 
         // 4 - 오디오 재생 시작
         audioTrack?.play()
@@ -67,7 +67,27 @@ class AudioThread(
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 2 - AudioTrack 객체를 생성한다.
+    // 2 - MediaCodec 객체를 생성한다.
+    private fun configureMediaCodec() {
+        if (extractor == null) {
+            return
+        }
+
+        if ((extractor!!.trackCount) > 0) {
+            val format = extractor!!.getTrackFormat(0)
+            val mime = format.getString(MediaFormat.KEY_MIME)
+                ?: error("Error occurred when get MIME from track format.")
+
+            codec = MediaCodec.createDecoderByType(mime).apply {
+                configure(format, null, null, 0)
+                start()
+            }
+            extractor?.selectTrack(0)
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // 3 - AudioTrack 객체를 생성한다.
     private fun configureAudioTrack() {
         if ((extractor?.trackCount ?: 0) > 0) {
             val format = extractor?.getTrackFormat(0)
@@ -100,23 +120,6 @@ class AudioThread(
                 .setAudioFormat(audioFormat)
                 .setBufferSizeInBytes(bufferSizeInBytes)
                 .build()
-        }
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // 3 - MediaCodec 객체를 생성한다.
-    private fun configureMediaCodec() {
-        if ((extractor?.trackCount ?: 0) > 0) {
-            val format = extractor?.getTrackFormat(0)
-                ?: error("Error occurred when get track format from extractor.")
-            val mime = format.getString(MediaFormat.KEY_MIME)
-                ?: error("Error occurred when get MIME from track format.")
-
-            codec = MediaCodec.createDecoderByType(mime).apply {
-                configure(format, null, null, 0)
-                start()
-            }
-            extractor?.selectTrack(0)
         }
     }
 
