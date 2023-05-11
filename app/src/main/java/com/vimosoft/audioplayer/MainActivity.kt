@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
     // 음악 재생을 위한 변수들
     private var audioThread: AudioThread? = null
     private var isSeek = false
-    private var playbackPosition = 0L
+    private var playbackPositionInUi = 0L
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer SeekBar를 조작하는 Handler와 Runnable
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     if (fromUser) {
                         isSeek = true
-                        playbackPosition = (progress * 1000 * 1000).toLong()
+                        playbackPositionInUi = (progress * 1000 * 1000).toLong()
                     }
                 }
 
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private fun playMusic() {
         if (audioThread?.isAlive != true) {
             audioThread = when (isSeek) {
-                true -> AudioThread(applicationContext, isSeek, playbackPosition)
+                true -> AudioThread(applicationContext, isSeek, playbackPositionInUi)
                 false -> AudioThread(applicationContext)
             }
             isSeek = false

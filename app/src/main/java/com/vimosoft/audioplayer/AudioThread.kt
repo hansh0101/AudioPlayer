@@ -7,8 +7,8 @@ import timber.log.Timber
 
 class AudioThread(
     private val context: Context,
-    isSeekInUi: Boolean = false,
-    playbackPositionInUi: Long = 0L
+    private var isSeek: Boolean = false,
+    var playbackPosition: Long = 0L
 ) : Thread() {
     // ---------------------------------------------------------------------------------------------
     // AudioThread 동작에 필요한 MediaCodec, MediaExtractor, AudioTrack 변수들
@@ -19,8 +19,6 @@ class AudioThread(
     // ---------------------------------------------------------------------------------------------
     // Audio 재생 컨트롤에 관한 변수들
     private lateinit var assetFileDescriptor: AssetFileDescriptor
-    var isSeek = isSeekInUi
-    var playbackPosition = playbackPositionInUi
     var duration = 0L
 
     // ---------------------------------------------------------------------------------------------
