@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     private var playbackPosition = 0L
 
     // ---------------------------------------------------------------------------------------------
-    // UI 조작을 위한 변수들
+    // AudioPlayer SeekBar를 조작하는 Handler와 Runnable
     private val handler = Handler(Looper.getMainLooper())
     private val updateSeekBarRunnable = object : Runnable {
         override fun run() {
@@ -69,6 +69,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioThread를 사용해 음악을 재생하는 메서드
     private fun playMusic() {
         if (audioThread?.isAlive != true) {
             audioThread = when (isSeek) {
@@ -83,6 +85,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioThread를 사용해 음악을 재생하던 것을 중지하는 메서드
     private fun stopMusic() {
         if (audioThread?.isAlive == true) {
             audioThread?.interrupt()
