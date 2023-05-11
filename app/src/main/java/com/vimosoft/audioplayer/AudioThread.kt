@@ -119,12 +119,12 @@ class AudioThread(
 
         val timeOutUs = 10000L
         val bufferInfo = MediaCodec.BufferInfo()
-        var isReachedInputEOS = false
+        var isEOS = false
         var noOutputCount = 0
         val noOutputCountLimit = 50
 
         // 반복문을 통해 inputBuffer를 읽고 outputBuffer를 통해 쓴다.
-        while (!isReachedInputEOS && noOutputCount < noOutputCountLimit && !isInterrupted) {
+        while (!isEOS && noOutputCount < noOutputCountLimit && !isInterrupted) {
             noOutputCount++
 
             if (isSeek) {
@@ -141,7 +141,7 @@ class AudioThread(
                 var flag = 0
 
                 if (sampleSize < 0) {
-                    isReachedInputEOS = true
+                    isEOS = true
                     sampleSize = 0
                     flag = MediaCodec.BUFFER_FLAG_END_OF_STREAM
                 } else {
@@ -150,28 +150,40 @@ class AudioThread(
 
                 codec!!.queueInputBuffer(inputBufferIndex, 0, sampleSize, currentTimeUs, flag)
 
-                if (!isReachedInputEOS) {
+                if (!isEOS) {
                     extractor!!.advance()
                 }
             }
 
             // OutputBuffer 처리
-            val outputBufferIndex = codec!!.dequeueOutputBuffer(bufferInfo, timeOutUs)
-            if (outputBufferIndex >= 0) {
-                if (bufferInfo.size > 0) {
-                    noOutputCount = 0
+            when (val outputBufferIndex = codec!!.dequeueOutputBuffer(bufferInfo, timeOutUs)) {
+                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+                    // The output format has changed, update any renderer
+                    // configuration here if necessary
                 }
-
-                val buffer = codec!!.getOutputBuffer(outputBufferIndex)
-                val chunk = ByteArray(bufferInfo.size)
-                buffer?.get(chunk)
-                buffer?.clear()
-
-                if (chunk.isNotEmpty()) {
-                    audioTrack!!.write(chunk, 0, chunk.size)
+                MediaCodec.INFO_TRY_AGAIN_LATER -> {
+                    // No output available yet, wait for it
                 }
+                else -> {
+                    if (bufferInfo.size > 0) {
+                        noOutputCount = 0
+                    }
 
-                codec!!.releaseOutputBuffer(outputBufferIndex, false)
+                    val buffer = codec!!.getOutputBuffer(outputBufferIndex)
+                    val chunk = ByteArray(bufferInfo.size)
+                    buffer?.get(chunk)
+                    buffer?.clear()
+
+                    if (chunk.isNotEmpty()) {
+                        audioTrack!!.write(chunk, 0, chunk.size)
+                    }
+
+                    codec!!.releaseOutputBuffer(outputBufferIndex, false)
+                }
+            }
+
+            if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                isEOS = true
             }
 
             // playbackPosition 갱신
