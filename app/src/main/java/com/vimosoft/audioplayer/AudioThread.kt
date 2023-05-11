@@ -92,22 +92,24 @@ class AudioThread(
     private fun configureMediaExtractor() {
         extractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
-            selectTrack(0)
         }
     }
 
     // ---------------------------------------------------------------------------------------------
     // 3 - MediaCodec 객체를 생성한다.
     private fun configureMediaCodec() {
-        val format = extractor?.getTrackFormat(0)
-            ?: error("Error occurred when get track format from extractor.")
-        val mime = format.getString(MediaFormat.KEY_MIME)
-            ?: error("Error occured when get MIME from track format.")
-        duration = format.getLong(MediaFormat.KEY_DURATION)
+        if ((extractor?.trackCount ?: 0) > 0) {
+            val format = extractor?.getTrackFormat(0)
+                ?: error("Error occurred when get track format from extractor.")
+            val mime = format.getString(MediaFormat.KEY_MIME)
+                ?: error("Error occured when get MIME from track format.")
+            duration = format.getLong(MediaFormat.KEY_DURATION)
 
-        codec = MediaCodec.createDecoderByType(mime).apply {
-            configure(format, null, null, 0)
-            start()
+            codec = MediaCodec.createDecoderByType(mime).apply {
+                configure(format, null, null, 0)
+                start()
+            }
+            extractor?.selectTrack(0)
         }
     }
 
