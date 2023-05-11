@@ -140,7 +140,7 @@ class AudioThread(
             if (inputBufferIndex >= 0) {
                 val destinationBuffer = codec!!.getInputBuffer(inputBufferIndex) ?: break
                 var sampleSize = extractor!!.readSampleData(destinationBuffer, 0)
-                var currentTimeUs = 0L
+                var presentationTimeUs = 0L
                 var flag = 0
 
                 if (sampleSize < 0) {
@@ -148,10 +148,10 @@ class AudioThread(
                     sampleSize = 0
                     flag = MediaCodec.BUFFER_FLAG_END_OF_STREAM
                 } else {
-                    currentTimeUs = extractor!!.sampleTime
+                    presentationTimeUs = extractor!!.sampleTime
                 }
 
-                codec!!.queueInputBuffer(inputBufferIndex, 0, sampleSize, currentTimeUs, flag)
+                codec!!.queueInputBuffer(inputBufferIndex, 0, sampleSize, presentationTimeUs, flag)
 
                 if (!isEOS) {
                     extractor!!.advance()
