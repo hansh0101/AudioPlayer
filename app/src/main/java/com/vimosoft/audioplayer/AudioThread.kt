@@ -197,7 +197,7 @@ class AudioThread(
 
     companion object {
         private const val TAG = "AudioThread"
-        private const val SAMPLE_RATE = 88200
+        private const val SAMPLE_RATE = 44100
         private const val FILE_NAME = "music.mp3"
     }
 }
