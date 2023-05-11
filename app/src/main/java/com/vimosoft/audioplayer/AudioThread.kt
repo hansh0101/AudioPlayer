@@ -1,7 +1,6 @@
 package com.vimosoft.audioplayer
 
 import android.content.Context
-import android.content.res.AssetFileDescriptor
 import android.media.*
 import timber.log.Timber
 
@@ -18,14 +17,12 @@ class AudioThread(
 
     // ---------------------------------------------------------------------------------------------
     // Audio 재생 컨트롤에 관한 변수들
-    private lateinit var assetFileDescriptor: AssetFileDescriptor
     var duration = 0L
 
     // ---------------------------------------------------------------------------------------------
     // Thread의 동작을 정의한다.
     override fun run() {
         // 1 - MediaExtractor 객체 생성
-        assetFileDescriptor = context.assets.openFd(FILE_NAME)
         configureMediaExtractor()
         Timber.tag(TAG).i("1 - MediaExtractor 객체 구성")
 
@@ -51,7 +48,6 @@ class AudioThread(
         Timber.tag(TAG).i("6 - 오디오 재생 중지")
 
         // 7 - 리소스 해제
-        assetFileDescriptor.close()
         codec?.release()
         extractor?.release()
         audioTrack?.release()
@@ -61,9 +57,11 @@ class AudioThread(
     // ---------------------------------------------------------------------------------------------
     // 1 - MediaExtractor 객체를 생성한다.
     private fun configureMediaExtractor() {
+        val assetFileDescriptor = context.assets.openFd(FILE_NAME)
         extractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
         }
+        assetFileDescriptor.close()
     }
 
     // ---------------------------------------------------------------------------------------------
