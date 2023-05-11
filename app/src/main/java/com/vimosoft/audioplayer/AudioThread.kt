@@ -24,14 +24,14 @@ class AudioThread(
     // ---------------------------------------------------------------------------------------------
     // Thread의 동작을 정의한다.
     override fun run() {
-        // 1 - AudioTrack 객체 생성
-        configureAudioTrack()
-        Timber.tag(TAG).i("1 - AudioTrack 객체 구성")
-
-        // 2 - MediaExtractor 객체 생성
+        // 1 - MediaExtractor 객체 생성
         assetFileDescriptor = context.assets.openFd(FILE_NAME)
         configureMediaExtractor()
-        Timber.tag(TAG).i("2 - MediaExtractor 객체 구성")
+        Timber.tag(TAG).i("1 - MediaExtractor 객체 구성")
+
+        // 2 - AudioTrack 객체 생성
+        configureAudioTrack()
+        Timber.tag(TAG).i("2 - AudioTrack 객체 구성")
 
         // 3 - MediaCodec 객체 생성
         configureMediaCodec()
@@ -59,37 +59,47 @@ class AudioThread(
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 1 - AudioTrack 객체를 생성한다.
-    private fun configureAudioTrack() {
-        val sampleRateInHz = SAMPLE_RATE
-        val channelConfig = AudioFormat.CHANNEL_OUT_STEREO
-        val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
-        val bufferSizeInBytes =
-            AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
-
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_MEDIA)
-            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-            .build()
-
-        val audioFormat = AudioFormat.Builder()
-            .setChannelMask(channelConfig)
-            .setEncoding(audioEncodingFormat)
-            .setSampleRate(sampleRateInHz)
-            .build()
-
-        audioTrack = AudioTrack.Builder()
-            .setAudioAttributes(audioAttributes)
-            .setAudioFormat(audioFormat)
-            .setBufferSizeInBytes(bufferSizeInBytes)
-            .build()
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // 2 - MediaExtractor 객체를 생성한다.
+    // 1 - MediaExtractor 객체를 생성한다.
     private fun configureMediaExtractor() {
         extractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // 2 - AudioTrack 객체를 생성한다.
+    private fun configureAudioTrack() {
+        if ((extractor?.trackCount ?: 0) > 0) {
+            val format = extractor?.getTrackFormat(0)
+                ?: error("Error occurred when get track format from extractor.")
+            duration = format.getLong(MediaFormat.KEY_DURATION)
+
+            val sampleRateInHz = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            val channelConfig = when (format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)) {
+                1 -> AudioFormat.CHANNEL_OUT_MONO
+                2 -> AudioFormat.CHANNEL_OUT_STEREO
+                else -> AudioFormat.CHANNEL_OUT_MONO
+            }
+            val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
+            val bufferSizeInBytes =
+                AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
+
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+
+            val audioFormat = AudioFormat.Builder()
+                .setChannelMask(channelConfig)
+                .setEncoding(audioEncodingFormat)
+                .setSampleRate(sampleRateInHz)
+                .build()
+
+            audioTrack = AudioTrack.Builder()
+                .setAudioAttributes(audioAttributes)
+                .setAudioFormat(audioFormat)
+                .setBufferSizeInBytes(bufferSizeInBytes)
+                .build()
         }
     }
 
@@ -100,8 +110,7 @@ class AudioThread(
             val format = extractor?.getTrackFormat(0)
                 ?: error("Error occurred when get track format from extractor.")
             val mime = format.getString(MediaFormat.KEY_MIME)
-                ?: error("Error occured when get MIME from track format.")
-            duration = format.getLong(MediaFormat.KEY_DURATION)
+                ?: error("Error occurred when get MIME from track format.")
 
             codec = MediaCodec.createDecoderByType(mime).apply {
                 configure(format, null, null, 0)
@@ -195,7 +204,6 @@ class AudioThread(
 
     companion object {
         private const val TAG = "AudioThread"
-        private const val SAMPLE_RATE = 44100
         private const val FILE_NAME = "music.mp3"
     }
 }
