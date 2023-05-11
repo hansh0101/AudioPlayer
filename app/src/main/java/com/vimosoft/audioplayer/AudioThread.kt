@@ -30,24 +30,25 @@ class AudioThread(
         configureAudioTrack()
         Timber.tag(TAG).i("1 - AudioTrack 객체 구성")
 
-        // 2 - 오디오 재생 시작
-        audioTrack?.play()
-        Timber.tag(TAG).i("2 - 오디오 재생 시작")
-
-        // 3 - MediaExtractor 객체 생성
+        // 2 - MediaExtractor 객체 생성
         assetFileDescriptor = context.assets.openFd(FILE_NAME)
         configureMediaExtractor()
-        Timber.tag(TAG).i("3 - MediaExtractor 객체 구성")
+        Timber.tag(TAG).i("2 - MediaExtractor 객체 구성")
 
-        // 4 - MediaCodec 객체 구성
+        // 3 - MediaCodec 객체 생성
         configureMediaCodec()
-        Timber.tag(TAG).i("4 - MediaCodec 객체 구성")
+        Timber.tag(TAG).i("3 - MediaCodec 객체 구성")
+
+        // 4 - 오디오 재생 시작
+        audioTrack?.play()
+        Timber.tag(TAG).i("4 - 오디오 재생 시작")
 
         // 5 - MediaCodec을 통해 음원 디코딩 및 AudioTrack을 통해 음원 재생
         decodeAndPlay()
         Timber.tag(TAG).i("5 - MediaCodec 통해 음원 디코딩 및 AudioTrack 통해 음원 재생")
 
         // 6 - 오디오 재생 중지
+        codec?.stop()
         audioTrack?.stop()
         Timber.tag(TAG).i("6 - 오디오 재생 중지")
 
@@ -87,22 +88,22 @@ class AudioThread(
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 3 - MediaExtractor 객체를 생성한다.
+    // 2 - MediaExtractor 객체를 생성한다.
     private fun configureMediaExtractor() {
         extractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
+            selectTrack(0)
         }
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 4 - MediaCodec 객체를 생성한다.
+    // 3 - MediaCodec 객체를 생성한다.
     private fun configureMediaCodec() {
         val format = extractor?.getTrackFormat(0)
             ?: error("Error occurred when get track format from extractor.")
         val mime = format.getString(MediaFormat.KEY_MIME)
             ?: error("Error occured when get MIME from track format.")
         duration = format.getLong(MediaFormat.KEY_DURATION)
-        extractor?.selectTrack(0)
 
         codec = MediaCodec.createDecoderByType(mime).apply {
             configure(format, null, null, 0)
