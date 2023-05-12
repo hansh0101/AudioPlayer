@@ -11,9 +11,9 @@ class AudioThread(
 ) : Thread() {
     // ---------------------------------------------------------------------------------------------
     // AudioThread 동작에 필요한 MediaCodec, MediaExtractor, AudioTrack 변수들
-    private var audioTrack: AudioTrack? = null
     private var extractor: MediaExtractor? = null
     private var codec: MediaCodec? = null
+    private var audioTrack: AudioTrack? = null
 
     // ---------------------------------------------------------------------------------------------
     // Audio 재생 컨트롤에 관한 변수들
@@ -34,24 +34,13 @@ class AudioThread(
         configureAudioTrack()
         Timber.tag(TAG).i("3 - AudioTrack 객체 구성")
 
-        // 4 - 오디오 재생 시작
-        audioTrack?.play()
-        Timber.tag(TAG).i("4 - 오디오 재생 시작")
-
-        // 5 - MediaCodec을 통해 음원 디코딩 및 AudioTrack을 통해 음원 재생
+        // 4 - MediaCodec을 통해 음원 디코딩 및 AudioTrack을 통해 음원 재생
         decodeAndPlay()
-        Timber.tag(TAG).i("5 - MediaCodec 통해 음원 디코딩 및 AudioTrack 통해 음원 재생")
+        Timber.tag(TAG).i("4 - MediaCodec 통해 음원 디코딩 및 AudioTrack 통해 음원 재생")
 
-        // 6 - 오디오 재생 중지
-        codec?.stop()
-        audioTrack?.stop()
-        Timber.tag(TAG).i("6 - 오디오 재생 중지")
-
-        // 7 - 리소스 해제
-        codec?.release()
-        extractor?.release()
-        audioTrack?.release()
-        Timber.tag(TAG).i("7 - 리소스 해제")
+        // 5 - 재생 종료 후 리소스 해제
+        releaseResources()
+        Timber.tag(TAG).i("5 - 재생 종료 후 리소스 해제")
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -122,12 +111,14 @@ class AudioThread(
                 .setAudioFormat(audioFormat)
                 .setBufferSizeInBytes(bufferSizeInBytes)
                 .setTransferMode(AudioTrack.MODE_STREAM)
-                .build()
+                .build().apply {
+                    play()
+                }
         }
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 5 - MediaCodec을 통해 음원 디코딩을 처리하고 AudioTrack을 통해 음원을 재생한다.
+    // 4 - MediaCodec을 통해 음원 디코딩을 처리하고 AudioTrack을 통해 음원을 재생한다.
     private fun decodeAndPlay() {
         // AudioTrack, MediaExtractor, MediaCodec 객체가 null이면 실행을 멈춘다.
         if (audioTrack == null || extractor == null || codec == null) {
@@ -223,6 +214,16 @@ class AudioThread(
         }
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // 5 - 오디오 재생을 종료하고 리소스를 해제한다.
+    private fun releaseResources() {
+        codec?.stop()
+        audioTrack?.stop()
+
+        codec?.release()
+        extractor?.release()
+        audioTrack?.release()
+    }
 
     companion object {
         private const val TAG = "AudioThread"
