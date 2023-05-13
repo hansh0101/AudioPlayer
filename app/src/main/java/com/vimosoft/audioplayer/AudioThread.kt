@@ -131,16 +131,10 @@ class AudioThread(
         val bufferInfo = MediaCodec.BufferInfo()
         // End-Of-Stream에 도달했는지?
         var isEOS = false
-        // Output이 나오지 않은 횟수.
-        var noOutputCount = 0
-        // noOutputCount가 50을 넘기면 더 이상 디코딩 및 재생 작업을 수행하지 않는다.
-        val noOutputCountLimit = 50
 
         // 미디어 파일을 디코딩해 재생한다.
         // 미디어 파일의 EOS에 도달하지 않았고, Output이 잘 나오고 있으며 스레드가 인터럽트되지 않은 경우 수행
-        while (!isEOS && noOutputCount < noOutputCountLimit && !isInterrupted) {
-            noOutputCount++
-
+        while (!isEOS && !isInterrupted) {
             // 특정 위치 탐색을 원하는가?
             if (isSeek) {
                 // MediaExtractor를 특정 위치(playbackPosition)으로 이동시킨다.
@@ -188,10 +182,6 @@ class AudioThread(
                     // No output available yet, wait for it
                 }
                 else -> {
-                    if (bufferInfo.size > 0) {
-                        noOutputCount = 0
-                    }
-
                     // MediaCodec에서 출력 데이터를 담은 버퍼를 가져온다.
                     val buffer = codec!!.getOutputBuffer(outputBufferIndex)
                     // MediaCodec의 버퍼 크기만큼의 ByteArray를 만들고, 버퍼의 내용을 ByteArray로 옮긴다.
