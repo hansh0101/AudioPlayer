@@ -13,23 +13,25 @@ class MainActivity : AppCompatActivity() {
     // 음악 재생을 위한 변수들
     private var audioThread: AudioThread? = null
     private var isSeek = false
-    private var playbackPositionInUi = 0L
+    private var desiredPosition = 0L
 
     // ---------------------------------------------------------------------------------------------
-    // AudioPlayer SeekBar를 조작하는 Handler와 Runnable
-    private val handler = Handler(Looper.getMainLooper())
-    private val updateSeekBarRunnable = object : Runnable {
+    // UI를 갱신하기 위한 Handler와 Runnable
+    private val uiUpdateHandler = Handler(Looper.getMainLooper())
+    private val uiUpdateRunnable = object : Runnable {
         override fun run() {
+            // AudioThread의 생사 여부에 따라 UI를 갱신한다.
             if (audioThread?.isAlive == true) {
                 val duration = (audioThread!!.duration / 1000 / 1000).toInt()
                 if (binding.seekBar.max != duration && duration != 0) {
                     binding.seekBar.max = duration
                 }
+
                 binding.seekBar.progress = (audioThread!!.playbackPosition / 1000 / 1000).toInt()
-                handler.postDelayed(this, 1000)
+                uiUpdateHandler.postDelayed(this, 1000)
             } else {
                 binding.textPlayerState.text = getString(R.string.state_stop)
-                handler.removeCallbacks(this)
+                uiUpdateHandler.removeCallbacks(this)
             }
         }
     }
@@ -57,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     if (fromUser) {
                         isSeek = true
-                        playbackPositionInUi = (progress * 1000 * 1000).toLong()
+                        desiredPosition = (progress * 1000 * 1000).toLong()
                     }
                 }
 
@@ -75,12 +77,12 @@ class MainActivity : AppCompatActivity() {
     private fun playMusic() {
         if (audioThread?.isAlive != true) {
             audioThread = when (isSeek) {
-                true -> AudioThread(applicationContext, isSeek, playbackPositionInUi)
+                true -> AudioThread(applicationContext, isSeek, desiredPosition)
                 false -> AudioThread(applicationContext)
             }
             isSeek = false
             audioThread?.start()
-            handler.post(updateSeekBarRunnable)
+            uiUpdateHandler.post(uiUpdateRunnable)
 
             binding.textPlayerState.text = getString(R.string.state_play)
         }
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         if (audioThread?.isAlive == true) {
             audioThread?.interrupt()
             audioThread = null
-            handler.removeCallbacks(updateSeekBarRunnable)
+            uiUpdateHandler.removeCallbacks(uiUpdateRunnable)
 
             binding.seekBar.progress = 0
             binding.textPlayerState.text = getString(R.string.state_stop)
