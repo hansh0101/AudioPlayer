@@ -67,7 +67,9 @@ class MainActivity : AppCompatActivity() {
                     stopMusic()
                 }
 
-                override fun onStopTrackingTouch(seekBar: SeekBar) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    playMusic()
+                }
             })
         }
     }
