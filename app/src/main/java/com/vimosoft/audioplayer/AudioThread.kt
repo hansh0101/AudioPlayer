@@ -23,15 +23,11 @@ class AudioThread(
     // Thread의 동작을 정의한다.
     override fun run() {
         // 1 - MediaExtractor 객체 생성
-        configureMediaExtractor()
-        Timber.tag(TAG).i("1 - MediaExtractor 객체 구성")
-
         // 2 - MediaCodec 객체 생성
-        configureMediaCodec()
-        Timber.tag(TAG).i("2 - MediaCodec 객체 구성")
-
         // 3 - AudioTrack 객체 생성
-        configureAudioTrack()
+        configureResource()
+        Timber.tag(TAG).i("1 - MediaExtractor 객체 구성")
+        Timber.tag(TAG).i("2 - MediaCodec 객체 구성")
         Timber.tag(TAG).i("3 - AudioTrack 객체 구성")
 
         // 4 - MediaCodec을 통해 음원 디코딩 및 AudioTrack을 통해 음원 재생
@@ -41,6 +37,12 @@ class AudioThread(
         // 5 - 재생 종료 후 리소스 해제
         releaseResources()
         Timber.tag(TAG).i("5 - 재생 종료 후 리소스 해제")
+    }
+
+    private fun configureResource() {
+        configureMediaExtractor()
+        configureMediaCodec()
+        configureAudioTrack()
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -133,7 +135,7 @@ class AudioThread(
         var isEOS = false
 
         // 미디어 파일을 디코딩해 재생한다.
-        // 미디어 파일의 EOS에 도달하지 않았고, Output이 잘 나오고 있으며 스레드가 인터럽트되지 않은 경우 수행
+        // 미디어 파일의 EOS에 도달하지 않았고, 스레드가 인터럽트되지 않은 경우 수행
         while (!isEOS && !isInterrupted) {
             // 특정 위치 탐색을 원하는가?
             if (isSeek) {
