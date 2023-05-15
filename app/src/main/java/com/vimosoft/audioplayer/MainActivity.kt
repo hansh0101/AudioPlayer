@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
                 uiUpdateHandler.postDelayed(this, 1000)
             } else {
                 uiUpdateHandler.removeCallbacks(this)
+                binding.seekBar.progress = (audioPlayer!!.playbackPosition / 1000 / 1000).toInt()
                 binding.textPlayerState.text = getString(R.string.state_pause)
             }
         }
