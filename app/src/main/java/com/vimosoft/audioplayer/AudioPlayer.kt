@@ -35,8 +35,10 @@ class AudioPlayer(private val context: Context) {
 
     // ---------------------------------------------------------------------------------------------
     // MediaExtractor, MediaCodec, AudioTrack 객체를 준비한다.
-    fun prepare(fileName: String) {
-        this.fileName = fileName
+    fun prepare(fileName: String = "") {
+        if (fileName != "") {
+            this.fileName = fileName
+        }
 
         configureMediaExtractor()
         configureMediaCodec()

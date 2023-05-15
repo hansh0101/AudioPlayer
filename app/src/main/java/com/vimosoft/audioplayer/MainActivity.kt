@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun configureAudioPlayer() {
         audioPlayer = AudioPlayer(applicationContext).apply {
-            prepare("music.mp3")
+            prepare(FILE_NAME)
         }
     }
 
@@ -104,5 +104,9 @@ class MainActivity : AppCompatActivity() {
     private fun pauseMusic() {
         audioPlayer?.pause()
         binding.textPlayerState.text = getString(R.string.state_pause)
+    }
+
+    companion object {
+        private const val FILE_NAME = "music.mp3"
     }
 }
