@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
                 binding.seekBar.progress = (audioThread!!.playbackPosition / 1000 / 1000).toInt()
                 uiUpdateHandler.postDelayed(this, 1000)
             } else {
-                binding.textPlayerState.text = getString(R.string.state_stop)
+                binding.textPlayerState.text = getString(R.string.state_pause)
                 uiUpdateHandler.removeCallbacks(this)
             }
         }
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private fun initEventListener() {
         binding.run {
             buttonPlay.setOnClickListener { playMusic() }
-            buttonStop.setOnClickListener { stopMusic() }
+            buttonPause.setOnClickListener { stopMusic() }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     if (fromUser) {
@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             uiUpdateHandler.removeCallbacks(uiUpdateRunnable)
 
             binding.seekBar.progress = 0
-            binding.textPlayerState.text = getString(R.string.state_stop)
+            binding.textPlayerState.text = getString(R.string.state_pause)
         }
     }
 }
