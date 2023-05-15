@@ -7,7 +7,6 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
 import com.vimosoft.audioplayer.databinding.ActivityMainBinding
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
@@ -19,8 +18,6 @@ class MainActivity : AppCompatActivity() {
     private val uiUpdateHandler = Handler(Looper.getMainLooper())
     private val uiUpdateRunnable = object : Runnable {
         override fun run() {
-            Timber.tag("isPlaying?").i("${audioPlayer?.isPlaying}")
-
             // AudioThread의 생사 여부에 따라 UI를 갱신한다.
             if (audioPlayer?.isPlaying == true) {
                 val duration = (audioPlayer!!.duration / 1000 / 1000).toInt()
