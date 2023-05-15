@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
             buttonPause.setOnClickListener { pauseMusic() }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L
-                val isPlayed: Boolean = audioPlayer?.isPlaying ?: false
+                var isPlayed: Boolean = false
 
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     if (fromUser) {
@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    isPlayed = audioPlayer?.isPlaying ?: false
                     pauseMusic()
                 }
 
@@ -96,10 +97,8 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
     // AudioThread를 사용해 음악을 재생하는 메서드
     private fun playMusic() {
-        Timber.tag("playMusic()").i("called")
-
         audioPlayer?.play()
-        uiUpdateHandler.post(uiUpdateRunnable)
+        uiUpdateHandler.postDelayed(uiUpdateRunnable, 200)
         binding.textPlayerState.text = getString(R.string.state_play)
     }
 
