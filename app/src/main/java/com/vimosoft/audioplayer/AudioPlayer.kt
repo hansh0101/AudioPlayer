@@ -31,7 +31,7 @@ class AudioPlayer(private val context: Context) {
     // 현재 재생 위치
     var playbackPosition: Long = 0L
 
-    var timer: Timer? = null
+    private var timer: Timer? = null
 
     // ---------------------------------------------------------------------------------------------
     // MediaExtractor, MediaCodec, AudioTrack 객체를 준비한다.
@@ -60,8 +60,14 @@ class AudioPlayer(private val context: Context) {
         timer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 playbackPosition = audioPlayerThread?.playbackPosition ?: 0L
+                if (audioPlayerThread?.isAlive == false) {
+                    isPlaying = false
+                    timer?.cancel()
+                    timer = null
+                    prepare()
+                }
             }
-        }, 0, 1000)
+        }, 0, 100)
     }
 
     // 오디오 출력을 일시중지한다.
