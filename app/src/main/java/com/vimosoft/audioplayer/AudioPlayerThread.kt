@@ -107,7 +107,6 @@ class AudioPlayerThread(
 
     fun play() {
         resumeThread()
-        this.start()
     }
 
     fun pause() {
@@ -132,9 +131,5 @@ class AudioPlayerThread(
             isPaused = false
             lock.notify()
         }
-    }
-
-    companion object {
-        private const val TAG = "AudioPlayerThread"
     }
 }

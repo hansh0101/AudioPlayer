@@ -47,7 +47,12 @@ class AudioPlayer(private val context: Context) {
     // 오디오 출력을 시작한다.
     fun play() {
         isPlaying = true
-        audioPlayerThread?.play()
+        if (audioPlayerThread?.isAlive != true) {
+            configureAudioPlayerThread()
+            audioPlayerThread?.start()
+        } else {
+            audioPlayerThread?.play()
+        }
 
         timer = Timer()
         timer?.scheduleAtFixedRate(object : TimerTask() {
