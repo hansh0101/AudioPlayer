@@ -73,6 +73,7 @@ class AudioPlayer(private val context: Context) {
                     isPlaying = false
                     timer?.cancel()
                     timer = null
+                    audioPlayerThread = null
                     prepare()
                 }
             }
@@ -112,8 +113,6 @@ class AudioPlayer(private val context: Context) {
             configureMediaCodec(format)
             // AudioTrack 객체를 구성한다.
             configureAudioTrack(format)
-            // AudioPlayerThread 객체를 구성한다.
-            configureAudioPlayerThread()
         }.onFailure { Timber.e(it) }
     }
 
