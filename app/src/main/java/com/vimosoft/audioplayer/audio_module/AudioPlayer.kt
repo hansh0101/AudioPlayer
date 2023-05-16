@@ -1,4 +1,4 @@
-package com.vimosoft.audioplayer
+package com.vimosoft.audioplayer.audio_module
 
 import android.content.Context
 import android.media.*
