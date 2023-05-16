@@ -10,8 +10,9 @@ import java.util.*
  */
 class AudioPlayer(private val context: Context) {
     // ---------------------------------------------------------------------------------------------
-    // 현재 AudioPlayer와 오디오 재생과 관련한 상태를 나타내는 public variables.
+    // 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
+
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
@@ -32,6 +33,7 @@ class AudioPlayer(private val context: Context) {
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
+
     /**
      * 미디어 파일을 읽어들일 MediaExtractor 객체.
      */
@@ -54,6 +56,7 @@ class AudioPlayer(private val context: Context) {
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생 시 주기적으로 playbackPosition을 갱신하기 위한 private instance variables.
+
     /**
      * 오디오가 재생될 때 실행될 Timer 객체.
      */
@@ -76,6 +79,11 @@ class AudioPlayer(private val context: Context) {
         }
 
     // ---------------------------------------------------------------------------------------------
+    // 오디오 재생에 필요한 private variables.
+
+    /**
+     * 재생할 오디오 파일의 이름을 나타내는 String 값.
+     */
     private var fileName: String = ""
 
     // ---------------------------------------------------------------------------------------------

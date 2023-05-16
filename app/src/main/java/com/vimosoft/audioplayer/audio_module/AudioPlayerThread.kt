@@ -5,15 +5,55 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import timber.log.Timber
 
+/**
+ * 오디오 파일 디코딩 및 재생만을 담당하는 Thread 객체.
+ */
 class AudioPlayerThread(
+    /**
+     * 미디어 파일을 읽어들일 MediaExtractor 객체.
+     */
     private val mediaExtractor: MediaExtractor,
+    /**
+     * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
+     */
     private val mediaCodec: MediaCodec,
+    /**
+     * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
+     */
     private val audioTrack: AudioTrack
 ) : Thread() {
+    // ---------------------------------------------------------------------------------------------
+    // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
+    // 외부에서는 getter만 사용 가능하다.
+
+    /**
+     * 현재 재생 중인 위치(단위 - microsecond) 값.
+     */
+    @Volatile
     var playbackPosition: Long = 0L
-    private var isPaused: Boolean = true
+        private set
+
+    /**
+     * 현재 AudioPlayerThread가 일시정지인지를 나타내는 Boolean 값.
+     */
+    @Volatile
+    var isPaused: Boolean = true
+        private set
+
+    // ---------------------------------------------------------------------------------------------
+    // 오디오 스레드 실행 제어에 필요한 private instance variables.
+
+    /**
+     * Thread 제어를 위한 Object 객체.
+     */
     private val lock = Object()
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioPlayerThread가 외부에 제공하는 public methods.
+
+    /**
+     * 'MediaExtractor를 통한 미디어 파일 추출 -> MediaCodec을 통한 디코딩 -> AudioTrack을 통한 디바이스 스피커 출력'을 수행한다.
+     */
     override fun run() {
         // MediaCodec에서 Input/Output buffer를 꺼내올 때 timeout의 기준이 되는 마이크로초.
         val timeOutUs = 10000L
@@ -23,8 +63,9 @@ class AudioPlayerThread(
         var isEOS = false
 
         // 미디어 파일을 디코딩해 재생한다.
-        // 미디어 파일의 EOS에 도달하지 않았고, 스레드가 인터럽트되지 않은 경우 수행
+        // 미디어 파일의 EOS에 도달하지 않았고, 스레드가 인터럽트되지 않은 경우 수행한다.
         while (!isEOS && !isInterrupted) {
+            // 일시정지를 위한 synchronized 블록
             synchronized(lock) {
                 while (isPaused) {
                     try {
@@ -105,25 +146,43 @@ class AudioPlayerThread(
         }
     }
 
+    /**
+     * 오디오 재생을 시작한다.
+     */
     fun play() {
         resumeThread()
     }
 
+    /**
+     * 오디오 재생을 중지한다.
+     */
     fun pause() {
         pauseThread()
     }
 
+    /**
+     * 재생 위치를 조정한다.
+     */
     fun seek(playbackPosition: Long) {
         audioTrack.flush()
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioPlayerThread 내부에서만 사용되는 private methods.
+
+    /**
+     * Thread 실행을 일시정지한다.
+     */
     private fun pauseThread() {
         synchronized(lock) {
             isPaused = true
         }
     }
 
+    /**
+     * Thread 실행을 재개한다.
+     */
     private fun resumeThread() {
         synchronized(lock) {
             isPaused = false
