@@ -31,7 +31,20 @@ class AudioPlayer(private val context: Context) {
     // 현재 재생 위치
     var playbackPosition: Long = 0L
 
+    // playbackPosition 갱신을 위한 Timer 및 TimerTask
     private var timer: Timer? = null
+    private val playbackPositionUpdater: TimerTask
+        get() = object : TimerTask() {
+            override fun run() {
+                playbackPosition = audioPlayerThread?.playbackPosition ?: 0L
+                if (audioPlayerThread?.isAlive == false) {
+                    isPlaying = false
+                    timer?.cancel()
+                    timer = null
+                    prepare()
+                }
+            }
+        }
 
     // ---------------------------------------------------------------------------------------------
     // MediaExtractor, MediaCodec, AudioTrack 객체를 준비한다.
@@ -57,17 +70,7 @@ class AudioPlayer(private val context: Context) {
         }
 
         timer = Timer()
-        timer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                playbackPosition = audioPlayerThread?.playbackPosition ?: 0L
-                if (audioPlayerThread?.isAlive == false) {
-                    isPlaying = false
-                    timer?.cancel()
-                    timer = null
-                    prepare()
-                }
-            }
-        }, 0, 100)
+        timer?.scheduleAtFixedRate(playbackPositionUpdater, 0, 100)
     }
 
     // 오디오 출력을 일시중지한다.
