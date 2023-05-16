@@ -65,9 +65,8 @@ class AudioPlayer(private val context: Context) {
         if (audioPlayerThread?.isAlive != true) {
             configureAudioPlayerThread()
             audioPlayerThread?.start()
-        } else {
-            audioPlayerThread?.play()
         }
+        audioPlayerThread?.play()
 
         timer = Timer()
         timer?.scheduleAtFixedRate(playbackPositionUpdater, 0, 100)

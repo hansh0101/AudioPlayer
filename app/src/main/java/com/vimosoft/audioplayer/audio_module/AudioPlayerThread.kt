@@ -11,7 +11,7 @@ class AudioPlayerThread(
     private val audioTrack: AudioTrack
 ) : Thread() {
     var playbackPosition: Long = 0L
-    private var isPaused: Boolean = false
+    private var isPaused: Boolean = true
     private val lock = Object()
 
     override fun run() {
