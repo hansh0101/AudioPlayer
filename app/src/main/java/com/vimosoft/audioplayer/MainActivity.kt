@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        audioPlayer?.releaseResources()
+        audioPlayer?.release()
         audioPlayer = null
     }
 
@@ -108,6 +108,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val FILE_NAME = "music.mp3"
+        const val FILE_NAME = "music.mp3"
     }
 }

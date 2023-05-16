@@ -85,7 +85,7 @@ class AudioPlayer(private val context: Context) {
     }
 
     // 오디오 재생을 종료하고 리소스를 해제한다.
-    fun releaseResources() {
+    fun release() {
         mediaCodec?.stop()
         audioTrack?.stop()
 
