@@ -153,6 +153,11 @@ class AudioPlayerThread(
         onFinish()
     }
 
+    override fun interrupt() {
+        super.interrupt()
+        onFinish()
+    }
+
     /**
      * 오디오 재생을 시작한다.
      */
