@@ -3,7 +3,6 @@ package com.vimosoft.audioplayer.model.audio_module
 import android.content.Context
 import android.media.*
 import timber.log.Timber
-import java.util.*
 
 /**
  * 오디오 파일을 재생하는 객체.
@@ -53,29 +52,6 @@ class AudioPlayer(private val context: Context) {
     private var audioPlayerThread: AudioPlayerThread? = null
 
     // ---------------------------------------------------------------------------------------------
-    // 오디오 재생 시 주기적으로 playbackPosition을 갱신하기 위한 private instance variables.
-
-    /**
-     * 오디오가 재생될 때 실행될 Timer 객체.
-     */
-    private var timer: Timer? = null
-
-    /**
-     * Timer 객체 내에서 일정 시간마다 반복해 playbackPosition을 갱신할 TimerTask 객체.
-     */
-    private val playbackPositionUpdater: TimerTask
-        get() = object : TimerTask() {
-            override fun run() {
-                if (audioPlayerThread?.isAlive == false) {
-                    timer?.cancel()
-                    timer = null
-                    audioPlayerThread = null
-                    prepare()
-                }
-            }
-        }
-
-    // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 필요한 private variables.
 
     /**
@@ -122,9 +98,6 @@ class AudioPlayer(private val context: Context) {
                 audioPlayerThread?.start()
             }
             audioPlayerThread?.play()
-
-            timer = Timer()
-            timer?.scheduleAtFixedRate(playbackPositionUpdater, 0, 100)
         }.onFailure { Timber.e(it) }
     }
 
@@ -134,9 +107,6 @@ class AudioPlayer(private val context: Context) {
     fun pause() {
         runCatching {
             audioPlayerThread?.pause()
-
-            timer?.cancel()
-            timer = null
         }.onFailure { Timber.e(it) }
     }
 
@@ -249,7 +219,10 @@ class AudioPlayer(private val context: Context) {
             return
         }
 
-        audioPlayerThread = AudioPlayerThread(mediaExtractor!!, mediaCodec!!, audioTrack!!)
+        audioPlayerThread = AudioPlayerThread(mediaExtractor!!, mediaCodec!!, audioTrack!!) {
+            audioPlayerThread = null
+            prepare()
+        }
     }
 
     /**

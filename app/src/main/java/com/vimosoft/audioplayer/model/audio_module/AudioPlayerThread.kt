@@ -20,7 +20,11 @@ class AudioPlayerThread(
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
      */
-    private val audioTrack: AudioTrack
+    private val audioTrack: AudioTrack,
+    /**
+     * 오디오 재생을 마친 후 AudioPlayer 객체 내 audioPlayerThread를 null로 만들어줄 Callback.
+     */
+    private val onFinish: () -> Unit
 ) : Thread() {
     // ---------------------------------------------------------------------------------------------
     // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
@@ -144,6 +148,9 @@ class AudioPlayerThread(
             // playbackPosition 갱신
             playbackPosition = mediaExtractor.sampleTime
         }
+
+        // 종료 후 onFinsh 콜백 메서드 호출
+        onFinish()
     }
 
     /**
