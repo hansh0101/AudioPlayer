@@ -16,8 +16,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
-    var isPlaying: Boolean = false
-        private set
+    val isPlaying: Boolean get() = audioPlayerThread?.isPaused == false
 
     /**
      * 오디오 파일의 길이(단위 - microsecond) 값.
@@ -28,8 +27,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 재생 중인 위치(단위 - microsecond) 값.
      */
-    var playbackPosition: Long = 0L
-        private set
+    val playbackPosition: Long get() = audioPlayerThread?.playbackPosition ?: 0L
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
@@ -68,9 +66,7 @@ class AudioPlayer(private val context: Context) {
     private val playbackPositionUpdater: TimerTask
         get() = object : TimerTask() {
             override fun run() {
-                playbackPosition = audioPlayerThread?.playbackPosition ?: 0L
                 if (audioPlayerThread?.isAlive == false) {
-                    isPlaying = false
                     timer?.cancel()
                     timer = null
                     audioPlayerThread = null
@@ -121,7 +117,6 @@ class AudioPlayer(private val context: Context) {
      */
     fun play() {
         runCatching {
-            isPlaying = true
             if (audioPlayerThread?.isAlive != true) {
                 configureAudioPlayerThread()
                 audioPlayerThread?.start()
@@ -138,7 +133,6 @@ class AudioPlayer(private val context: Context) {
      */
     fun pause() {
         runCatching {
-            isPlaying = false
             audioPlayerThread?.pause()
 
             timer?.cancel()
