@@ -48,6 +48,11 @@ class AudioPlayerThread(
     // 오디오 스레드 실행 제어에 필요한 private instance variables.
 
     /**
+     * 현재 AudioPlayer가 run()을 실행하기 시작했는지를 나타내는 Boolean 값.
+     */
+    private var isStarted: Boolean = false
+
+    /**
      * Thread 제어를 위한 Object 객체.
      */
     private val lock = Object()
@@ -59,6 +64,8 @@ class AudioPlayerThread(
      * 'MediaExtractor를 통한 미디어 파일 추출 -> MediaCodec을 통한 디코딩 -> AudioTrack을 통한 디바이스 스피커 출력'을 수행한다.
      */
     override fun run() {
+        isStarted = true
+
         // MediaCodec에서 Input/Output buffer를 꺼내올 때 timeout의 기준이 되는 마이크로초.
         val timeOutUs = 10000L
         // MediaCodec의 버퍼에 대한 메타데이터.
@@ -162,7 +169,9 @@ class AudioPlayerThread(
      * 오디오 재생을 시작한다.
      */
     fun play() {
-        start()
+        if (!isStarted) {
+            start()
+        }
         resumeThread()
     }
 
