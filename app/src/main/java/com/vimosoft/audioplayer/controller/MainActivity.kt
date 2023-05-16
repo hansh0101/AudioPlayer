@@ -7,7 +7,7 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
 import com.vimosoft.audioplayer.R
-import com.vimosoft.audioplayer.audio_module.AudioPlayer
+import com.vimosoft.audioplayer.model.audio_module.AudioPlayer
 import com.vimosoft.audioplayer.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {

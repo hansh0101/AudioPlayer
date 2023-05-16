@@ -1,4 +1,4 @@
-package com.vimosoft.audioplayer.audio_module
+package com.vimosoft.audioplayer.model.audio_module
 
 import android.media.AudioTrack
 import android.media.MediaCodec
