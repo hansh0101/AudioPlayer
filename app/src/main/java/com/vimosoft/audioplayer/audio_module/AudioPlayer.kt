@@ -2,37 +2,66 @@ package com.vimosoft.audioplayer.audio_module
 
 import android.content.Context
 import android.media.*
+import timber.log.Timber
 import java.util.*
 
+/**
+ * 오디오 파일을 재생하는 객체.
+ */
 class AudioPlayer(private val context: Context) {
     // ---------------------------------------------------------------------------------------------
-    // Media 재생과 관련된 Android 라이브러리 객체
-    private var mediaExtractor: MediaExtractor? = null
-    private var mediaCodec: MediaCodec? = null
-    private var audioTrack: AudioTrack? = null
+    // 현재 AudioPlayer와 오디오 재생과 관련한 상태를 나타내는 public variables.
+    // 외부에서는 getter만 사용 가능하다.
+    /**
+     * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
+     */
+    var isPlaying: Boolean = false
+        private set
+
+    /**
+     * 오디오 파일의 길이(단위 - microsecond) 값.
+     */
+    var duration: Long = 0L
+        private set
+
+    /**
+     * 현재 재생 중인 위치(단위 - microsecond) 값.
+     */
+    var playbackPosition: Long = 0L
+        private set
 
     // ---------------------------------------------------------------------------------------------
-    // Audio 재생을 담당하는 스레드
+    // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
+    /**
+     * 미디어 파일을 읽어들일 MediaExtractor 객체.
+     */
+    private var mediaExtractor: MediaExtractor? = null
+
+    /**
+     * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
+     */
+    private var mediaCodec: MediaCodec? = null
+
+    /**
+     * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
+     */
+    private var audioTrack: AudioTrack? = null
+
+    /**
+     * 오디오 디코딩 및 재생만을 담당하는 AudioPlayerThread 객체.
+     */
     private var audioPlayerThread: AudioPlayerThread? = null
 
     // ---------------------------------------------------------------------------------------------
-    // 현재 재생 중인가?
-    var isPlaying: Boolean = false
-
-    // 재생할 파일명
-    private var fileName: String = ""
-
-    // 트랙 인덱스
-    private var trackIndex: Int = -1
-
-    // 트랙 길이
-    var duration: Long = 0L
-
-    // 현재 재생 위치
-    var playbackPosition: Long = 0L
-
-    // playbackPosition 갱신을 위한 Timer 및 TimerTask
+    // 오디오 재생 시 주기적으로 playbackPosition을 갱신하기 위한 private instance variables.
+    /**
+     * 오디오가 재생될 때 실행될 Timer 객체.
+     */
     private var timer: Timer? = null
+
+    /**
+     * Timer 객체 내에서 일정 시간마다 반복해 playbackPosition을 갱신할 TimerTask 객체.
+     */
     private val playbackPositionUpdater: TimerTask
         get() = object : TimerTask() {
             override fun run() {
@@ -47,108 +76,132 @@ class AudioPlayer(private val context: Context) {
         }
 
     // ---------------------------------------------------------------------------------------------
-    // MediaExtractor, MediaCodec, AudioTrack 객체를 준비한다.
+    private var fileName: String = ""
+
+    // ---------------------------------------------------------------------------------------------
+    // AudioPlayer가 외부에 제공하는 public methods.
+
+    /**
+     * 오디오 재생을 위한 리소스를 준비한다.
+     */
     fun prepare(fileName: String = "") {
-        if (fileName != "") {
-            this.fileName = fileName
-        }
+        runCatching {
+            if (fileName != "") {
+                this.fileName = fileName
+            }
 
-        configureMediaExtractor()
-        configureMediaCodec()
-        configureAudioTrack()
-        configureAudioPlayerThread()
-    }
+            // MediaExtractor 객체를 구성한다.
+            configureMediaExtractor()
 
-    // 오디오 출력을 시작한다.
-    fun play() {
-        isPlaying = true
-        if (audioPlayerThread?.isAlive != true) {
+            // MediaExtractor 객체를 통해 오디오 트랙의 인덱스를 계산한다.
+            val trackIndex = getTrackIndex()
+            // MediaExtractor가 추출할 트랙의 MediaFormat
+            val format = mediaExtractor!!.getTrackFormat(trackIndex)
+            // trackIndex가 유효하다면 해당 인덱스로 MediaExtractor가 추출할 트랙을 설정한다.
+            mediaExtractor?.selectTrack(trackIndex)
+
+            // MediaCodec 객체를 구성한다.
+            configureMediaCodec(format)
+            // AudioTrack 객체를 구성한다.
+            configureAudioTrack(format)
+            // AudioPlayerThread 객체를 구성한다.
             configureAudioPlayerThread()
-            audioPlayerThread?.start()
-        }
-        audioPlayerThread?.play()
-
-        timer = Timer()
-        timer?.scheduleAtFixedRate(playbackPositionUpdater, 0, 100)
+        }.onFailure { Timber.e(it) }
     }
 
-    // 오디오 출력을 일시중지한다.
+    /**
+     * 오디오 재생을 시작한다.
+     */
+    fun play() {
+        runCatching {
+            isPlaying = true
+            if (audioPlayerThread?.isAlive != true) {
+                configureAudioPlayerThread()
+                audioPlayerThread?.start()
+            }
+            audioPlayerThread?.play()
+
+            timer = Timer()
+            timer?.scheduleAtFixedRate(playbackPositionUpdater, 0, 100)
+        }.onFailure { Timber.e(it) }
+    }
+
+    /**
+     * 오디오 재생을 중지한다.
+     */
     fun pause() {
-        isPlaying = false
-        audioPlayerThread?.pause()
+        runCatching {
+            isPlaying = false
+            audioPlayerThread?.pause()
 
-        timer?.cancel()
-        timer = null
+            timer?.cancel()
+            timer = null
+        }.onFailure { Timber.e(it) }
     }
 
-    // 오디오 출력을 원하는 시점으로 설정한다.
+    /**
+     * 재생 위치를 조정한다.
+     */
     fun seek(playbackPosition: Long) {
-        audioPlayerThread?.seek(playbackPosition)
+        runCatching {
+            audioPlayerThread?.seek(playbackPosition)
+        }.onFailure { Timber.e(it) }
     }
 
-    // 오디오 재생을 종료하고 리소스를 해제한다.
+    /**
+     * 오디오 재생을 마친 후 리소스를 정리한다.
+     */
     fun release() {
-        mediaCodec?.stop()
-        audioTrack?.stop()
+        runCatching {
+            mediaCodec?.stop()
+            audioTrack?.stop()
 
-        mediaCodec?.release()
-        mediaExtractor?.release()
-        audioTrack?.release()
+            mediaCodec?.release()
+            mediaExtractor?.release()
+            audioTrack?.release()
 
-        audioPlayerThread?.interrupt()
-        audioPlayerThread = null
+            audioPlayerThread?.interrupt()
+            audioPlayerThread = null
+        }.onFailure { Timber.e(it) }
     }
 
     // ---------------------------------------------------------------------------------------------
-    // MediaExtractor 객체를 구성한다.
+    // AudioPlayer 내부에서만 사용되는 private methods.
+
+    /**
+     * MediaExtractor 객체를 구성한다.
+     */
     private fun configureMediaExtractor() {
         val assetFileDescriptor = context.assets.openFd(fileName)
         mediaExtractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
         }
         assetFileDescriptor.close()
-
-        val trackCount = mediaExtractor!!.trackCount
-        for (i in (trackIndex + 1) until trackCount) {
-            val format = mediaExtractor!!.getTrackFormat(i)
-            duration = format.getLong(MediaFormat.KEY_DURATION)
-            val mimeType = format.getString(MediaFormat.KEY_MIME)
-                ?: error("Error occurred when get MIME type from track format.")
-
-            if (mimeType.startsWith("audio/")) {
-                trackIndex = i
-                break
-            }
-        }
-
-        if (trackIndex in 0 until trackCount) {
-            mediaExtractor!!.selectTrack(trackIndex)
-        }
     }
 
-    // MediaCodec 객체를 구성한다.
-    private fun configureMediaCodec() {
+    /**
+     * MediaCodec 객체를 구성한다.
+     */
+    private fun configureMediaCodec(format: MediaFormat) {
         if (mediaExtractor == null) {
             return
         }
 
-        val format = mediaExtractor!!.getTrackFormat(trackIndex)
         val mimeType = format.getString(MediaFormat.KEY_MIME)
-            ?: error("Error occurred in ")
-
-        mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
+        mediaCodec = MediaCodec.createDecoderByType(mimeType!!).apply {
             configure(format, null, null, 0)
             start()
         }
     }
 
-    // AudioTrack 객체를 구성한다.
-    private fun configureAudioTrack() {
+    /**
+     * AudioTrack 객체를 구성한다.
+     */
+    private fun configureAudioTrack(format: MediaFormat) {
         if (mediaExtractor == null) {
             return
         }
 
-        val format = mediaExtractor!!.getTrackFormat(trackIndex)
         val sampleRateInHz = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig =
             when (val channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)) {
@@ -187,12 +240,39 @@ class AudioPlayer(private val context: Context) {
             }
     }
 
-    // AudioPlayerThread 객체를 구성한다.
+    /**
+     * AudioPlayerThread 객체를 구성한다.
+     */
     private fun configureAudioPlayerThread() {
         if (mediaExtractor == null || mediaCodec == null || audioTrack == null) {
             return
         }
 
         audioPlayerThread = AudioPlayerThread(mediaExtractor!!, mediaCodec!!, audioTrack!!)
+    }
+
+    /**
+     * AudioTrack의 인덱스를 반환한다.
+     */
+    private fun getTrackIndex(): Int {
+        if (mediaExtractor == null) {
+            return -1
+        }
+
+        var trackIndex = -1
+        val trackCount = mediaExtractor!!.trackCount
+        for (i in 0 until trackCount) {
+            val format = mediaExtractor!!.getTrackFormat(i)
+            duration = format.getLong(MediaFormat.KEY_DURATION)
+            val mimeType = format.getString(MediaFormat.KEY_MIME)
+                ?: error("Error occurred when get MIME type from track format.")
+
+            if (mimeType.startsWith("audio/")) {
+                trackIndex = i
+                break
+            }
+        }
+
+        return trackIndex
     }
 }
