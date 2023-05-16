@@ -157,6 +157,7 @@ class AudioPlayerThread(
      * 오디오 재생을 시작한다.
      */
     fun play() {
+        start()
         resumeThread()
     }
 

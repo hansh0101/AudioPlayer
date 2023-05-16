@@ -93,9 +93,8 @@ class AudioPlayer(private val context: Context) {
      */
     fun play() {
         runCatching {
-            if (audioPlayerThread?.isAlive != true) {
+            if (audioPlayerThread == null) {
                 configureAudioPlayerThread()
-                audioPlayerThread?.start()
             }
             audioPlayerThread?.play()
         }.onFailure { Timber.e(it) }
