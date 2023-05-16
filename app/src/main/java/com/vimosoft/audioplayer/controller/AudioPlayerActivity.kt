@@ -23,7 +23,7 @@ class AudioPlayerActivity : AppCompatActivity() {
             // AudioThread의 생사 여부에 따라 UI를 갱신한다.
             if (audioPlayer?.isPlaying == true) {
                 val duration = (audioPlayer!!.duration / 1000 / 1000).toInt()
-                if (binding.seekBar.max != duration && duration != 0) {
+                if (binding.seekBar.max != duration) {
                     binding.seekBar.max = duration
                 }
 
