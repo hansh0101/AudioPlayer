@@ -7,10 +7,10 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
 import com.vimosoft.audioplayer.R
-import com.vimosoft.audioplayer.databinding.ActivityMainBinding
+import com.vimosoft.audioplayer.databinding.ActivityAudioPlayerBinding
 import com.vimosoft.audioplayer.model.audio_module.AudioPlayer
 
-class MainActivity : AppCompatActivity() {
+class AudioPlayerActivity : AppCompatActivity() {
     // ---------------------------------------------------------------------------------------------
     // 음악 재생을 위한 AudioPlayer 객체
     private var audioPlayer: AudioPlayer? = null
@@ -39,13 +39,13 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------------------------------------
     // UI 바인딩 객체 변수
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityAudioPlayerBinding
 
     // ---------------------------------------------------------------------------------------------
     // 생명주기 콜백 메서드
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityAudioPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         configureAudioPlayer()
