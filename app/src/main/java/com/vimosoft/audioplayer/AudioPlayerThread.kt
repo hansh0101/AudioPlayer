@@ -114,10 +114,8 @@ class AudioPlayerThread(
     }
 
     fun seek(playbackPosition: Long) {
-        pauseThread()
         audioTrack.flush()
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
-        resumeThread()
     }
 
     private fun pauseThread() {
