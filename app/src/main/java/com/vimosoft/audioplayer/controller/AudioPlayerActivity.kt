@@ -58,6 +58,8 @@ class AudioPlayerActivity : AppCompatActivity() {
         audioPlayer = null
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioPlayer 객체 구성
     private fun configureAudioPlayer() {
         audioPlayer = AudioPlayer(applicationContext).apply {
             prepare(FILE_NAME)
@@ -95,7 +97,7 @@ class AudioPlayerActivity : AppCompatActivity() {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // AudioThread를 사용해 음악을 재생하는 메서드
+    // AudioPlayer를 사용해 오디오 파일을 재생하는 메서드
     private fun playMusic() {
         audioPlayer?.play()
         uiUpdateHandler.postDelayed(uiUpdateRunnable, 200)
@@ -103,7 +105,7 @@ class AudioPlayerActivity : AppCompatActivity() {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // AudioThread를 사용해 음악을 재생하던 것을 중지하는 메서드
+    // AudioPlayer를 사용해 오디오 파일 재생을 일시정지하는 메서드
     private fun pauseMusic() {
         audioPlayer?.pause()
         binding.textPlayerState.text = getString(R.string.state_pause)
