@@ -1,4 +1,4 @@
-package com.vimosoft.audioplayer
+package com.vimosoft.audioplayer.controller
 
 import android.os.Bundle
 import android.os.Handler
@@ -6,6 +6,7 @@ import android.os.Looper
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
+import com.vimosoft.audioplayer.R
 import com.vimosoft.audioplayer.audio_module.AudioPlayer
 import com.vimosoft.audioplayer.databinding.ActivityMainBinding
 
