@@ -34,7 +34,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 미디어 파일을 읽어들일 MediaExtractor 객체.
      */
-    private var mediaExtractor: MediaExtractor? = null
+    private lateinit var mediaExtractor: MediaExtractor
 
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
@@ -59,6 +59,16 @@ class AudioPlayer(private val context: Context) {
      */
     private var fileName: String = ""
 
+    /**
+     * 미디어 파일의 포맷
+     */
+    private lateinit var mediaFormat: MediaFormat
+
+    /**
+     * 미디어 파일 내에서 재생할 트랙의 인덱스 값.
+     */
+    private var trackIndex: Int = 0
+
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer가 외부에 제공하는 public methods.
 
@@ -66,20 +76,29 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 위한 리소스를 준비한다.
      */
     fun prepare(fileName: String = "") {
+        // fileName을 설정한다.
+        if (fileName != "") {
+            this.fileName = fileName
+        }
+
+        // MediaExtractor 객체를 구성한다.
         runCatching {
-            if (fileName != "") {
-                this.fileName = fileName
-            }
+            MediaExtractorManager.configure(context, this.fileName, "audio/")
+        }.onSuccess { mediaExtractorInfo ->
+            mediaExtractor = mediaExtractorInfo.mediaExtractor
+            trackIndex = mediaExtractorInfo.trackIndex
 
-            // MediaExtractor 객체를 구성한다.
-            configureMediaExtractor()
+            mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
+            duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
+        }.onFailure {
+            Timber.e(it)
+        }
 
-            // MediaExtractor 객체를 통해 오디오 트랙의 인덱스를 계산한다.
-            val trackIndex = getTrackIndex()
+        runCatching {
             // MediaExtractor가 추출할 트랙의 MediaFormat
-            val format = mediaExtractor!!.getTrackFormat(trackIndex)
+            val format = mediaExtractor.getTrackFormat(trackIndex)
             // trackIndex가 유효하다면 해당 인덱스로 MediaExtractor가 추출할 트랙을 설정한다.
-            mediaExtractor?.selectTrack(trackIndex)
+            mediaExtractor.selectTrack(trackIndex)
 
             // MediaCodec 객체를 구성한다.
             configureMediaCodec(format)
@@ -127,7 +146,7 @@ class AudioPlayer(private val context: Context) {
             audioTrack?.stop()
 
             mediaCodec?.release()
-            mediaExtractor?.release()
+            mediaExtractor.release()
             audioTrack?.release()
 
             audioPlayerThread?.interrupt()
@@ -137,26 +156,10 @@ class AudioPlayer(private val context: Context) {
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer 내부에서만 사용되는 private methods.
-
-    /**
-     * MediaExtractor 객체를 구성한다.
-     */
-    private fun configureMediaExtractor() {
-        val assetFileDescriptor = context.assets.openFd(fileName)
-        mediaExtractor = MediaExtractor().apply {
-            setDataSource(assetFileDescriptor)
-        }
-        assetFileDescriptor.close()
-    }
-
     /**
      * MediaCodec 객체를 구성한다.
      */
     private fun configureMediaCodec(format: MediaFormat) {
-        if (mediaExtractor == null) {
-            return
-        }
-
         val mimeType = format.getString(MediaFormat.KEY_MIME)
         mediaCodec = MediaCodec.createDecoderByType(mimeType!!).apply {
             configure(format, null, null, 0)
@@ -168,10 +171,6 @@ class AudioPlayer(private val context: Context) {
      * AudioTrack 객체를 구성한다.
      */
     private fun configureAudioTrack(format: MediaFormat) {
-        if (mediaExtractor == null) {
-            return
-        }
-
         val sampleRateInHz = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig =
             when (val channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)) {
@@ -214,39 +213,14 @@ class AudioPlayer(private val context: Context) {
      * AudioPlayerThread 객체를 구성한다.
      */
     private fun configureAudioPlayerThread() {
-        if (mediaExtractor == null || mediaCodec == null || audioTrack == null) {
+        if (mediaCodec == null || audioTrack == null) {
             return
         }
 
-        audioPlayerThread = AudioPlayerThread(mediaExtractor!!, mediaCodec!!, audioTrack!!) {
+        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec!!, audioTrack!!) {
             audioPlayerThread = null
             release()
             prepare()
         }
-    }
-
-    /**
-     * AudioTrack의 인덱스를 반환한다.
-     */
-    private fun getTrackIndex(): Int {
-        if (mediaExtractor == null) {
-            return -1
-        }
-
-        var trackIndex = -1
-        val trackCount = mediaExtractor!!.trackCount
-        for (i in 0 until trackCount) {
-            val format = mediaExtractor!!.getTrackFormat(i)
-            duration = format.getLong(MediaFormat.KEY_DURATION)
-            val mimeType = format.getString(MediaFormat.KEY_MIME)
-                ?: error("Error occurred when get MIME type from track format.")
-
-            if (mimeType.startsWith("audio/")) {
-                trackIndex = i
-                break
-            }
-        }
-
-        return trackIndex
     }
 }
