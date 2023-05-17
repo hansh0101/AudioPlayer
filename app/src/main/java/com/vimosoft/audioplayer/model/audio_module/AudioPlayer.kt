@@ -15,7 +15,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
-    val isPlaying: Boolean get() = audioPlayerThread?.isPaused == false
+    val isPlaying: Boolean get() = audioPlayerThread?.isPlaying == true
 
     /**
      * 오디오 파일의 길이(단위 - microsecond) 값.

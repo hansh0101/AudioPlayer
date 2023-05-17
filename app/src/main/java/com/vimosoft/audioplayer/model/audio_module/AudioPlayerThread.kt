@@ -41,7 +41,7 @@ class AudioPlayerThread(
      * 현재 AudioPlayerThread가 일시정지인지를 나타내는 Boolean 값.
      */
     @Volatile
-    var isPaused: Boolean = true
+    var isPlaying: Boolean = false
         private set
 
     // ---------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class AudioPlayerThread(
         while (!isEOS && !isInterrupted) {
             // 일시정지를 위한 synchronized 블록
             synchronized(lock) {
-                while (isPaused) {
+                while (!isPlaying) {
                     try {
                         lock.wait()
                     } catch (exception: InterruptedException) {
@@ -198,7 +198,7 @@ class AudioPlayerThread(
      */
     private fun pauseThread() {
         synchronized(lock) {
-            isPaused = true
+            isPlaying = false
         }
     }
 
@@ -207,7 +207,7 @@ class AudioPlayerThread(
      */
     private fun resumeThread() {
         synchronized(lock) {
-            isPaused = false
+            isPlaying = true
             lock.notify()
         }
     }
