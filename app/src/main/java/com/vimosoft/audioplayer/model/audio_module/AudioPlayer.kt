@@ -93,7 +93,7 @@ class AudioPlayer(private val context: Context) {
      */
     fun play() {
         runCatching {
-            if (audioPlayerThread == null) {
+            if (audioPlayerThread == null || audioPlayerThread?.isInterrupted == true) {
                 configureAudioPlayerThread()
             }
             audioPlayerThread?.play()
@@ -220,6 +220,7 @@ class AudioPlayer(private val context: Context) {
 
         audioPlayerThread = AudioPlayerThread(mediaExtractor!!, mediaCodec!!, audioTrack!!) {
             audioPlayerThread = null
+            release()
             prepare()
         }
     }
