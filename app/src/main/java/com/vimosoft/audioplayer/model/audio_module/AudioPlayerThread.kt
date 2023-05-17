@@ -194,21 +194,21 @@ class AudioPlayerThread(
     // AudioPlayerThread 내부에서만 사용되는 private methods.
 
     /**
-     * Thread 실행을 일시정지한다.
-     */
-    private fun pauseThread() {
-        synchronized(lock) {
-            isPlaying = false
-        }
-    }
-
-    /**
      * Thread 실행을 재개한다.
      */
     private fun resumeThread() {
         synchronized(lock) {
             isPlaying = true
             lock.notify()
+        }
+    }
+
+    /**
+     * Thread 실행을 일시정지한다.
+     */
+    private fun pauseThread() {
+        synchronized(lock) {
+            isPlaying = false
         }
     }
 }
