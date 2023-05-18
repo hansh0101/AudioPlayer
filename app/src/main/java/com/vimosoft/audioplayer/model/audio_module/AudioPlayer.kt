@@ -80,28 +80,15 @@ class AudioPlayer(private val context: Context) {
         }
 
         // MediaExtractor 객체를 구성한다.
-        runCatching {
+        mediaFormat =
             mediaExtractorManager.configureMediaExtractor(context, this.fileName, "audio/")
-        }.onSuccess { mediaFormat ->
-            this.mediaFormat = mediaFormat
-            duration = this.mediaFormat.getLong(MediaFormat.KEY_DURATION)
-        }.onFailure {
-            Timber.e(it)
-        }
+        duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodec 객체를 구성한다.
-        runCatching {
-            mediaCodecManager.configureAudioDecoder(mediaFormat)
-        }.onFailure {
-            Timber.e(it)
-        }
+        mediaCodecManager.configureAudioDecoder(mediaFormat)
 
         // AudioTrack 객체를 구성한다.
-        runCatching {
-            audioTrackManager.configureAudioTrack(mediaFormat)
-        }.onFailure {
-            Timber.e(it)
-        }
+        audioTrackManager.configureAudioTrack(mediaFormat)
     }
 
     /**
@@ -139,15 +126,11 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 마친 후 리소스를 정리한다.
      */
     fun release() {
-        runCatching {
-            mediaExtractorManager.release()
-            mediaCodecManager.release()
-            audioTrackManager.release()
-            audioThread?.interrupt()
-            audioThread = null
-        }.onFailure {
-            Timber.e(it)
-        }
+        mediaExtractorManager.release()
+        mediaCodecManager.release()
+        audioTrackManager.release()
+        audioThread?.interrupt()
+        audioThread = null
     }
 
     private fun configureAudioThread() {
