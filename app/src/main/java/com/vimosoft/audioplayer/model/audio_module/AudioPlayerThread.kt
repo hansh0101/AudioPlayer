@@ -90,14 +90,14 @@ class AudioPlayerThread(
             }
 
             // 입력 처리
-            val inputBufferInfo = mediaDecoderManager.getInputBuffer()
+            val inputBufferInfo = mediaDecoderManager.fetchEmptyInputBuffer()
             if (inputBufferInfo.buffer != null) {
                 val extractionResult =
                     mediaExtractorManager.extract(inputBufferInfo.buffer)
                 if (extractionResult.sampleSize < 0) {
                     isEOS = true
                 }
-                mediaDecoderManager.setInputBuffer(
+                mediaDecoderManager.deliverFilledInputBuffer(
                     inputBufferInfo.bufferIndex,
                     0,
                     extractionResult.sampleSize,
@@ -106,7 +106,7 @@ class AudioPlayerThread(
             }
 
             // 출력 처리
-            val outputBufferInfo = mediaDecoderManager.getOutputBuffer()
+            val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
             when (outputBufferInfo.bufferIndex) {
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
                 MediaCodec.INFO_TRY_AGAIN_LATER -> {}
@@ -117,7 +117,7 @@ class AudioPlayerThread(
                             outputBufferInfo.size
                         )
                     }
-                    mediaDecoderManager.setOutputBuffer(outputBufferInfo.bufferIndex, false)
+                    mediaDecoderManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
                 }
             }
 

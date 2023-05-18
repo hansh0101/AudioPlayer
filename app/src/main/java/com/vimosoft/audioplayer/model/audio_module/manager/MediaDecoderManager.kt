@@ -33,7 +33,7 @@ class MediaDecoderManager {
         }
     }
 
-    fun getInputBuffer(): InputBufferInfo {
+    fun fetchEmptyInputBuffer(): InputBufferInfo {
         val inputBufferIndex = _mediaDecoder.dequeueInputBuffer(timeoutUs)
         return if (inputBufferIndex >= 0) {
             val inputBuffer = _mediaDecoder.getInputBuffer(inputBufferIndex)
@@ -43,7 +43,7 @@ class MediaDecoderManager {
         }
     }
 
-    fun setInputBuffer(
+    fun deliverFilledInputBuffer(
         bufferIndex: Int,
         offset: Int,
         size: Int,
@@ -62,7 +62,7 @@ class MediaDecoderManager {
         }
     }
 
-    fun getOutputBuffer(): OutputBufferInfo {
+    fun fetchFilledOutputBuffer(): OutputBufferInfo {
         val outputBufferIndex = _mediaDecoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
         return if (outputBufferIndex >= 0) {
             val outputBuffer = _mediaDecoder.getOutputBuffer(outputBufferIndex)
@@ -72,7 +72,7 @@ class MediaDecoderManager {
         }
     }
 
-    fun setOutputBuffer(bufferIndex: Int, render: Boolean) {
+    fun releaseDiscardedOutputBuffer(bufferIndex: Int, render: Boolean) {
         _mediaDecoder.releaseOutputBuffer(bufferIndex, render)
     }
 
