@@ -3,11 +3,11 @@ package com.vimosoft.audioplayer.model.audio_module.manager
 import android.media.MediaCodec
 import android.media.MediaFormat
 
-class MediaCodecManager {
+class MediaDecoderManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
-    private lateinit var _mediaCodec: MediaCodec
-    val mediaCodec: MediaCodec get() = _mediaCodec
+    private lateinit var _mediaDecoder: MediaCodec
+    val mediaDecoder: MediaCodec get() = _mediaDecoder
 
     // ---------------------------------------------------------------------------------------------
     // public interfaces.
@@ -17,7 +17,7 @@ class MediaCodecManager {
         if (mimeType == null) {
             throw IllegalArgumentException("MIME type is null.")
         } else {
-            _mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
+            _mediaDecoder = MediaCodec.createDecoderByType(mimeType).apply {
                 configure(mediaFormat, null, null, 0)
                 start()
             }
@@ -25,7 +25,7 @@ class MediaCodecManager {
     }
 
     fun release() {
-        _mediaCodec.run {
+        _mediaDecoder.run {
             stop()
             release()
         }

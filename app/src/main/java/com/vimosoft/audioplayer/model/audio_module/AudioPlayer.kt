@@ -3,7 +3,7 @@ package com.vimosoft.audioplayer.model.audio_module
 import android.content.Context
 import android.media.MediaFormat
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
-import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaDecoderManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
@@ -42,7 +42,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
      */
-    private val mediaCodecManager: MediaCodecManager = MediaCodecManager()
+    private val mediaDecoderManager: MediaDecoderManager = MediaDecoderManager()
 
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
@@ -91,7 +91,7 @@ class AudioPlayer(private val context: Context) {
 
         // MediaCodec 객체를 구성한다.
         runCatching {
-            mediaCodecManager.configureAudioDecoder(mediaFormat)
+            mediaDecoderManager.configureAudioDecoder(mediaFormat)
         }.onFailure {
             Timber.e(it)
         }
@@ -140,7 +140,7 @@ class AudioPlayer(private val context: Context) {
     fun release() {
         runCatching {
             mediaExtractorManager.release()
-            mediaCodecManager.release()
+            mediaDecoderManager.release()
             audioTrackManager.release()
         }.onFailure {
             Timber.e(it)
@@ -152,7 +152,7 @@ class AudioPlayer(private val context: Context) {
      */
     private fun configureAudioPlayerThread() {
         audioPlayerThread =
-            AudioPlayerThread(mediaExtractorManager, mediaCodecManager, audioTrackManager) {
+            AudioPlayerThread(mediaExtractorManager, mediaDecoderManager, audioTrackManager) {
                 audioPlayerThread = null
                 release()
                 prepare()
