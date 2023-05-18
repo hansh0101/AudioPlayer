@@ -4,6 +4,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.MediaFormat
+import java.nio.ByteBuffer
 
 class AudioTrackManager {
     // ---------------------------------------------------------------------------------------------
@@ -46,6 +47,16 @@ class AudioTrackManager {
         _audioTrack.run {
             stop()
             release()
+        }
+    }
+
+    fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
+        val chunk = ByteArray(size)
+        outputBuffer.get(chunk)
+        outputBuffer.clear()
+
+        if (chunk.isNotEmpty()) {
+            _audioTrack.write(chunk, 0, chunk.size)
         }
     }
 

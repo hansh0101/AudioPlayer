@@ -123,29 +123,16 @@ class AudioPlayerThread(
                 }
             }
 
-            // MediaCodec에서 출력 데이터를 담은 버퍼의 인덱스를 가져온다.
+            // 출력 처리
             when (val outputBufferIndex = mediaDecoder.dequeueOutputBuffer(bufferInfo, timeOutUs)) {
-                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                    // The output format has changed, update any renderer
-                    // configuration here if necessary
-                }
-                MediaCodec.INFO_TRY_AGAIN_LATER -> {
-                    // No output available yet, wait for it
-                }
+                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
+                MediaCodec.INFO_TRY_AGAIN_LATER -> {}
                 else -> {
-                    // MediaCodec에서 출력 데이터를 담은 버퍼를 가져온다.
                     val buffer = mediaDecoder.getOutputBuffer(outputBufferIndex)
-                    // MediaCodec의 버퍼 크기만큼의 ByteArray를 만들고, 버퍼의 내용을 ByteArray로 옮긴다.
-                    val chunk = ByteArray(bufferInfo.size)
-                    buffer?.get(chunk)
-                    buffer?.clear()
-
-                    // ByteArray가 비어있지 않다면, AudioTrack을 사용해 디코딩된 출력 데이터를 재생한다.
-                    if (chunk.isNotEmpty()) {
-                        audioTrack.write(chunk, 0, chunk.size)
+                    if (buffer != null) {
+                        audioTrackManager.outputAudio(buffer, bufferInfo.size)
                     }
 
-                    // MediaCodec으로 출력 데이터를 담은 버퍼를 반환한다.
                     mediaDecoder.releaseOutputBuffer(outputBufferIndex, false)
                 }
             }
