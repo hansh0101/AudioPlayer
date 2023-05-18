@@ -30,4 +30,8 @@ class MediaDecoderManager {
             release()
         }
     }
+
+    fun flush() {
+        _mediaDecoder.flush()
+    }
 }

@@ -31,7 +31,6 @@ class AudioPlayerThread(
     // TODO - 나중에 지우긴 해야 하는데 일단 테스트를 위해 빼둔다.
     private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
     private val mediaDecoder get() = mediaDecoderManager.mediaDecoder
-    private val audioTrack get() = audioTrackManager.audioTrack
 
     // ---------------------------------------------------------------------------------------------
     // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
@@ -171,8 +170,8 @@ class AudioPlayerThread(
      * 재생 위치를 조정한다.
      */
     fun seek(playbackPosition: Long) {
-        audioTrack.flush()
-        mediaDecoder.flush()
+        audioTrackManager.flush()
+        mediaDecoderManager.flush()
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 

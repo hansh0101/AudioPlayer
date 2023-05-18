@@ -10,7 +10,6 @@ class AudioTrackManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
     private lateinit var _audioTrack: AudioTrack
-    val audioTrack: AudioTrack get() = _audioTrack
 
     // ---------------------------------------------------------------------------------------------
     // public interfaces.
@@ -58,6 +57,10 @@ class AudioTrackManager {
         if (chunk.isNotEmpty()) {
             _audioTrack.write(chunk, 0, chunk.size)
         }
+    }
+
+    fun flush() {
+        _audioTrack.flush()
     }
 
     // ---------------------------------------------------------------------------------------------
