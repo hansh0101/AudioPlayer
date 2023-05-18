@@ -3,7 +3,7 @@ package com.vimosoft.audioplayer.model.audio_module
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
-import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaDecoderManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
@@ -18,7 +18,7 @@ class AudioPlayerThread(
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder)Manager 객체.
      */
-    private val mediaCodecManager: MediaCodecManager,
+    private val mediaDecoderManager: MediaDecoderManager,
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrackManager 객체.
      */
@@ -30,7 +30,7 @@ class AudioPlayerThread(
 ) : Thread() {
     // TODO - 나중에 지우긴 해야 하는데 일단 테스트를 위해 빼둔다.
     private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
-    private val mediaCodec get() = mediaCodecManager.mediaCodec
+    private val mediaDecoder get() = mediaDecoderManager.mediaDecoder
     private val audioTrack get() = audioTrackManager.audioTrack
 
     // ---------------------------------------------------------------------------------------------
@@ -96,44 +96,33 @@ class AudioPlayerThread(
                 }
             }
 
-            // MediaCodec에서 입력 데이터를 쓸 버퍼의 인덱스를 가져온다.
-            val inputBufferIndex = mediaCodec.dequeueInputBuffer(timeOutUs)
+            // 입력 처리
+            val inputBufferIndex = mediaDecoder.dequeueInputBuffer(timeOutUs)
             if (inputBufferIndex >= 0) {
-                // MediaCodec에서 입력 데이터를 쓸 버퍼를 가져온다.
-                val destinationBuffer = mediaCodec.getInputBuffer(inputBufferIndex) ?: break
-                // MediaExtractor를 사용해 버퍼에 압축된 미디어 데이터 샘플을 저장하고, 크기를 sampleSize에 기록한다.
-                var sampleSize = mediaExtractor.readSampleData(destinationBuffer, 0)
-                // 현재 위치 마이크로초
-                var presentationTimeUs = 0L
-                // MediaCodec에 전달할 플래그
-                var flag = 0
-
-                // MediaExtractor로 읽어온 샘플의 크기가 0보다 작다면, 즉 읽지 못했다면?
-                if (sampleSize < 0) {
+                val destinationBuffer = mediaDecoder.getInputBuffer(inputBufferIndex) ?: break
+                val extractionResult = mediaExtractorManager.extract(destinationBuffer)
+                if (extractionResult.sampleSize < 0) {
                     isEOS = true
-                    sampleSize = 0
-                    flag = MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    mediaDecoder.queueInputBuffer(
+                        inputBufferIndex,
+                        0,
+                        0,
+                        extractionResult.presentationTimeUs,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    )
                 } else {
-                    presentationTimeUs = mediaExtractor.sampleTime
-                }
-
-                // MediaCodec에 입력 데이터를 쓴 버퍼를 넣는다.
-                mediaCodec.queueInputBuffer(
-                    inputBufferIndex,
-                    0,
-                    sampleSize,
-                    presentationTimeUs,
-                    flag
-                )
-
-                // EOS에 도달하지 않았다면 MediaExtractor가 미디어 데이터를 읽는 위치를 다음 샘플로 이동시킨다.
-                if (!isEOS) {
-                    mediaExtractor.advance()
+                    mediaDecoder.queueInputBuffer(
+                        inputBufferIndex,
+                        0,
+                        extractionResult.sampleSize,
+                        extractionResult.presentationTimeUs,
+                        0
+                    )
                 }
             }
 
             // MediaCodec에서 출력 데이터를 담은 버퍼의 인덱스를 가져온다.
-            when (val outputBufferIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, timeOutUs)) {
+            when (val outputBufferIndex = mediaDecoder.dequeueOutputBuffer(bufferInfo, timeOutUs)) {
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
                     // The output format has changed, update any renderer
                     // configuration here if necessary
@@ -143,7 +132,7 @@ class AudioPlayerThread(
                 }
                 else -> {
                     // MediaCodec에서 출력 데이터를 담은 버퍼를 가져온다.
-                    val buffer = mediaCodec.getOutputBuffer(outputBufferIndex)
+                    val buffer = mediaDecoder.getOutputBuffer(outputBufferIndex)
                     // MediaCodec의 버퍼 크기만큼의 ByteArray를 만들고, 버퍼의 내용을 ByteArray로 옮긴다.
                     val chunk = ByteArray(bufferInfo.size)
                     buffer?.get(chunk)
@@ -155,7 +144,7 @@ class AudioPlayerThread(
                     }
 
                     // MediaCodec으로 출력 데이터를 담은 버퍼를 반환한다.
-                    mediaCodec.releaseOutputBuffer(outputBufferIndex, false)
+                    mediaDecoder.releaseOutputBuffer(outputBufferIndex, false)
                 }
             }
 
@@ -194,7 +183,7 @@ class AudioPlayerThread(
      */
     fun seek(playbackPosition: Long) {
         audioTrack.flush()
-        mediaCodec.flush()
+        mediaDecoder.flush()
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 
