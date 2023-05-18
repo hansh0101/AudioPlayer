@@ -18,7 +18,8 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
-    val isPlaying: Boolean get() = audioPlayerThread?.isPlaying == true
+    @Volatile
+    var isPlaying: Boolean = false
 
     /**
      * 오디오 파일의 길이(단위 - microsecond) 값.
@@ -29,7 +30,8 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 재생 중인 위치(단위 - microsecond) 값.
      */
-    val playbackPosition: Long get() = audioPlayerThread?.playbackPosition ?: 0L
+    @Volatile
+    var playbackPosition: Long = 0L
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
@@ -49,10 +51,8 @@ class AudioPlayer(private val context: Context) {
      */
     private val audioTrackManager: AudioTrackManager = AudioTrackManager()
 
-    /**
-     * 오디오 디코딩 및 재생만을 담당하는 AudioPlayerThread 객체.
-     */
-    private var audioPlayerThread: AudioPlayerThread? = null
+    private val lock = Object()
+    private var audioThread: Thread? = null
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 필요한 private variables.
@@ -108,30 +108,33 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 시작한다.
      */
     fun play() {
-        runCatching {
-            if (audioPlayerThread == null || audioPlayerThread?.isInterrupted == true) {
-                configureAudioPlayerThread()
-            }
-            audioPlayerThread?.play()
-        }.onFailure { Timber.e(it) }
+        if (audioThread?.isAlive != true || audioThread?.isInterrupted == true) {
+            configureAudioThread()
+            audioThread?.start()
+        }
+
+        synchronized(lock) {
+            isPlaying = true
+            lock.notify()
+        }
     }
 
     /**
      * 오디오 재생을 중지한다.
      */
     fun pause() {
-        runCatching {
-            audioPlayerThread?.pause()
-        }.onFailure { Timber.e(it) }
+        synchronized(lock) {
+            isPlaying = false
+        }
     }
 
     /**
      * 재생 위치를 조정한다.
      */
     fun seek(playbackPosition: Long) {
-        runCatching {
-            audioPlayerThread?.seek(playbackPosition)
-        }.onFailure { Timber.e(it) }
+        audioTrackManager.flush()
+        mediaDecoderManager.flush()
+        mediaExtractorManager.seekTo(playbackPosition)
     }
 
     /**
@@ -147,15 +150,57 @@ class AudioPlayer(private val context: Context) {
         }
     }
 
-    /**
-     * AudioPlayerThread 객체를 구성한다.
-     */
-    private fun configureAudioPlayerThread() {
-        audioPlayerThread =
-            AudioPlayerThread(mediaExtractorManager, mediaDecoderManager, audioTrackManager) {
-                audioPlayerThread = null
-                release()
-                prepare()
+    private fun configureAudioThread() {
+        audioThread = Thread {
+            var isInputEOSReached = false
+            var isOutputEOSReached = false
+
+            while (!isInputEOSReached && !isOutputEOSReached && !Thread.currentThread().isInterrupted) {
+                synchronized(lock) {
+                    if (!isPlaying) {
+                        try {
+                            lock.wait()
+                        } catch (exception: InterruptedException) {
+                            Timber.e(exception)
+                            return@Thread
+                        }
+                    }
+                }
+
+                val inputBufferInfo = mediaDecoderManager.fetchEmptyInputBuffer()
+                if (inputBufferInfo.buffer != null) {
+                    val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
+                    if (extractionResult.sampleSize < 0) {
+                        isInputEOSReached = true
+                    }
+                    mediaDecoderManager.deliverFilledInputBuffer(
+                        inputBufferInfo.bufferIndex,
+                        0,
+                        extractionResult.sampleSize,
+                        extractionResult.presentationTimeUs
+                    )
+                }
+
+                val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
+                if (outputBufferInfo.buffer != null) {
+                    audioTrackManager.outputAudio(
+                        outputBufferInfo.buffer,
+                        outputBufferInfo.info.size
+                    )
+                    playbackPosition = outputBufferInfo.info.presentationTimeUs
+                    isOutputEOSReached = outputBufferInfo.isEOS
+                    mediaDecoderManager.releaseDiscardedOutputBuffer(
+                        outputBufferInfo.bufferIndex,
+                        false
+                    )
+                }
             }
+
+            release()
+            prepare()
+
+            isPlaying = false
+            playbackPosition = 0
+        }
     }
 }

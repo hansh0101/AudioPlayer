@@ -64,11 +64,12 @@ class MediaDecoderManager {
 
     fun fetchFilledOutputBuffer(): OutputBufferInfo {
         val outputBufferIndex = _mediaDecoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
+        val isEOS = bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
         return if (outputBufferIndex >= 0) {
             val outputBuffer = _mediaDecoder.getOutputBuffer(outputBufferIndex)
-            OutputBufferInfo(bufferInfo, outputBufferIndex, outputBuffer)
+            OutputBufferInfo(bufferInfo, outputBufferIndex, outputBuffer, isEOS)
         } else {
-            OutputBufferInfo(bufferInfo, outputBufferIndex, null)
+            OutputBufferInfo(bufferInfo, outputBufferIndex, null, isEOS)
         }
     }
 
@@ -93,5 +94,6 @@ data class InputBufferInfo(
 data class OutputBufferInfo(
     val info: MediaCodec.BufferInfo,
     val bufferIndex: Int,
-    val buffer: ByteBuffer?
+    val buffer: ByteBuffer?,
+    val isEOS: Boolean
 )
