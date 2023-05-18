@@ -1,6 +1,7 @@
 package com.vimosoft.audioplayer.model.audio_module.manager
 
 import android.media.MediaCodec
+import android.media.MediaCodec.BufferInfo
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
@@ -9,7 +10,7 @@ class MediaDecoderManager {
     // class variables.
     private lateinit var _mediaDecoder: MediaCodec
     private val timeoutUs: Long = TIMEOUT_US
-    private val bufferInfo = MediaCodec.BufferInfo()
+    private val bufferInfo = BufferInfo()
 
     // ---------------------------------------------------------------------------------------------
     // public interfaces.
@@ -66,9 +67,9 @@ class MediaDecoderManager {
         val outputBufferIndex = _mediaDecoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
         return if (outputBufferIndex >= 0) {
             val outputBuffer = _mediaDecoder.getOutputBuffer(outputBufferIndex)
-            OutputBufferInfo(bufferInfo.size, outputBufferIndex, outputBuffer)
+            OutputBufferInfo(bufferInfo, outputBufferIndex, outputBuffer)
         } else {
-            OutputBufferInfo(bufferInfo.size, outputBufferIndex, null)
+            OutputBufferInfo(bufferInfo, outputBufferIndex, null)
         }
     }
 
@@ -91,7 +92,7 @@ data class InputBufferInfo(
 )
 
 data class OutputBufferInfo(
-    val size: Int,
+    val info: BufferInfo,
     val bufferIndex: Int,
     val buffer: ByteBuffer?
 )

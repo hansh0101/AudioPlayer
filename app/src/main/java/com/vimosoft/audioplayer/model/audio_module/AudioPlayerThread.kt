@@ -27,9 +27,6 @@ class AudioPlayerThread(
      */
     private val onFinish: () -> Unit
 ) : Thread() {
-    // TODO - 나중에 지우긴 해야 하는데 일단 테스트를 위해 빼둔다.
-    private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
-
     // ---------------------------------------------------------------------------------------------
     // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
@@ -94,9 +91,6 @@ class AudioPlayerThread(
 
             // 출력 처리
             handleOutputData()
-
-            // playbackPosition 갱신
-            playbackPosition = mediaExtractor.sampleTime
         }
 
         // 종료 후 onFinsh 콜백 메서드 호출
@@ -192,9 +186,10 @@ class AudioPlayerThread(
                 if (outputBufferInfo.buffer != null) {
                     audioTrackManager.outputAudio(
                         outputBufferInfo.buffer,
-                        outputBufferInfo.size
+                        outputBufferInfo.info.size
                     )
                 }
+                playbackPosition = outputBufferInfo.info.presentationTimeUs
                 mediaDecoderManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
             }
         }
