@@ -48,6 +48,10 @@ class MediaExtractorManager {
         return ExtractionResult(sampleSize, presentationTimeUs)
     }
 
+    fun seekTo(playbackPosition: Long) {
+        _mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // private methods.
     private fun findTrackIndex(prefix: String): Int {

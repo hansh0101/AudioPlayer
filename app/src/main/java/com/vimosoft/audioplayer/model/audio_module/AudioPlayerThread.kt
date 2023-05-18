@@ -1,7 +1,6 @@
 package com.vimosoft.audioplayer.model.audio_module
 
 import android.media.MediaCodec
-import android.media.MediaExtractor
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaDecoderManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
@@ -172,7 +171,7 @@ class AudioPlayerThread(
     fun seek(playbackPosition: Long) {
         audioTrackManager.flush()
         mediaDecoderManager.flush()
-        mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+        mediaExtractorManager.seekTo(playbackPosition)
     }
 
     // ---------------------------------------------------------------------------------------------
