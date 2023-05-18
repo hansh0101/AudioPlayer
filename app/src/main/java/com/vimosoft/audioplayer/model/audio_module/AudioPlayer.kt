@@ -123,9 +123,7 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 중지한다.
      */
     fun pause() {
-        synchronized(lock) {
-            isPlaying = false
-        }
+        isPlaying = false
     }
 
     /**
@@ -145,6 +143,8 @@ class AudioPlayer(private val context: Context) {
             mediaExtractorManager.release()
             mediaDecoderManager.release()
             audioTrackManager.release()
+            audioThread?.interrupt()
+            audioThread = null
         }.onFailure {
             Timber.e(it)
         }
@@ -155,7 +155,7 @@ class AudioPlayer(private val context: Context) {
             var isInputEOSReached = false
             var isOutputEOSReached = false
 
-            while (!isInputEOSReached && !isOutputEOSReached && !Thread.currentThread().isInterrupted) {
+            while (!Thread.currentThread().isInterrupted) {
                 synchronized(lock) {
                     if (!isPlaying) {
                         try {
@@ -194,13 +194,17 @@ class AudioPlayer(private val context: Context) {
                         false
                     )
                 }
+
+                if (isInputEOSReached && isOutputEOSReached) {
+                    release()
+                    prepare()
+
+                    isPlaying = false
+                    playbackPosition = 0
+                    isInputEOSReached = false
+                    isOutputEOSReached = false
+                }
             }
-
-            release()
-            prepare()
-
-            isPlaying = false
-            playbackPosition = 0
         }
     }
 }
