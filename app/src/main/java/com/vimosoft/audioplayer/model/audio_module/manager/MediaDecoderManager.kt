@@ -8,7 +8,6 @@ class MediaDecoderManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
     private lateinit var _mediaDecoder: MediaCodec
-    val mediaDecoder: MediaCodec get() = _mediaDecoder
     private val timeoutUs: Long = TIMEOUT_US
     private val bufferInfo = MediaCodec.BufferInfo()
 
@@ -44,6 +43,25 @@ class MediaDecoderManager {
         }
     }
 
+    fun setInputBuffer(
+        bufferIndex: Int,
+        offset: Int,
+        size: Int,
+        presentationTimeUs: Long,
+    ) {
+        if (size < 0) {
+            _mediaDecoder.queueInputBuffer(
+                bufferIndex,
+                offset,
+                0,
+                presentationTimeUs,
+                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            )
+        } else {
+            _mediaDecoder.queueInputBuffer(bufferIndex, offset, size, presentationTimeUs, 0)
+        }
+    }
+
     fun getOutputBuffer(): OutputBufferInfo {
         val outputBufferIndex = _mediaDecoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
         return if (outputBufferIndex >= 0) {
@@ -52,6 +70,10 @@ class MediaDecoderManager {
         } else {
             OutputBufferInfo(bufferInfo.size, outputBufferIndex, null)
         }
+    }
+
+    fun setOutputBuffer(bufferIndex: Int, render: Boolean) {
+        _mediaDecoder.releaseOutputBuffer(bufferIndex, render)
     }
 
     fun flush() {

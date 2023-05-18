@@ -29,7 +29,6 @@ class AudioPlayerThread(
 ) : Thread() {
     // TODO - 나중에 지우긴 해야 하는데 일단 테스트를 위해 빼둔다.
     private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
-    private val mediaDecoder get() = mediaDecoderManager.mediaDecoder
 
     // ---------------------------------------------------------------------------------------------
     // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
@@ -97,22 +96,13 @@ class AudioPlayerThread(
                     mediaExtractorManager.extract(inputBufferInfo.buffer)
                 if (extractionResult.sampleSize < 0) {
                     isEOS = true
-                    mediaDecoder.queueInputBuffer(
-                        inputBufferInfo.bufferIndex,
-                        0,
-                        0,
-                        extractionResult.presentationTimeUs,
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                    )
-                } else {
-                    mediaDecoder.queueInputBuffer(
-                        inputBufferInfo.bufferIndex,
-                        0,
-                        extractionResult.sampleSize,
-                        extractionResult.presentationTimeUs,
-                        0
-                    )
                 }
+                mediaDecoderManager.setInputBuffer(
+                    inputBufferInfo.bufferIndex,
+                    0,
+                    extractionResult.sampleSize,
+                    extractionResult.presentationTimeUs
+                )
             }
 
             // 출력 처리
@@ -127,7 +117,7 @@ class AudioPlayerThread(
                             outputBufferInfo.size
                         )
                     }
-                    mediaDecoder.releaseOutputBuffer(outputBufferInfo.bufferIndex, false)
+                    mediaDecoderManager.setOutputBuffer(outputBufferInfo.bufferIndex, false)
                 }
             }
 
