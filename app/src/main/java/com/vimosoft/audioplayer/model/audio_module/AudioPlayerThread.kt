@@ -90,36 +90,10 @@ class AudioPlayerThread(
             }
 
             // 입력 처리
-            val inputBufferInfo = mediaDecoderManager.fetchEmptyInputBuffer()
-            if (inputBufferInfo.buffer != null) {
-                val extractionResult =
-                    mediaExtractorManager.extract(inputBufferInfo.buffer)
-                if (extractionResult.sampleSize < 0) {
-                    isEOS = true
-                }
-                mediaDecoderManager.deliverFilledInputBuffer(
-                    inputBufferInfo.bufferIndex,
-                    0,
-                    extractionResult.sampleSize,
-                    extractionResult.presentationTimeUs
-                )
-            }
+            isEOS = handleInputData()
 
             // 출력 처리
-            val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
-            when (outputBufferInfo.bufferIndex) {
-                MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
-                MediaCodec.INFO_TRY_AGAIN_LATER -> {}
-                else -> {
-                    if (outputBufferInfo.buffer != null) {
-                        audioTrackManager.outputAudio(
-                            outputBufferInfo.buffer,
-                            outputBufferInfo.size
-                        )
-                    }
-                    mediaDecoderManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
-                }
-            }
+            handleOutputData()
 
             // playbackPosition 갱신
             playbackPosition = mediaExtractor.sampleTime
@@ -179,6 +153,50 @@ class AudioPlayerThread(
     private fun pauseThread() {
         synchronized(lock) {
             isPlaying = false
+        }
+    }
+
+    /**
+     * 오디오 파일 입력을 처리한다.
+     */
+    private fun handleInputData(): Boolean {
+        var isEOS = false
+
+        val inputBufferInfo = mediaDecoderManager.fetchEmptyInputBuffer()
+        if (inputBufferInfo.buffer != null) {
+            val extractionResult =
+                mediaExtractorManager.extract(inputBufferInfo.buffer)
+            if (extractionResult.sampleSize < 0) {
+                isEOS = true
+            }
+            mediaDecoderManager.deliverFilledInputBuffer(
+                inputBufferInfo.bufferIndex,
+                0,
+                extractionResult.sampleSize,
+                extractionResult.presentationTimeUs
+            )
+        }
+
+        return isEOS
+    }
+
+    /**
+     * 오디오 파일 출력을 처리한다.
+     */
+    private fun handleOutputData() {
+        val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
+        when (outputBufferInfo.bufferIndex) {
+            MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
+            MediaCodec.INFO_TRY_AGAIN_LATER -> {}
+            else -> {
+                if (outputBufferInfo.buffer != null) {
+                    audioTrackManager.outputAudio(
+                        outputBufferInfo.buffer,
+                        outputBufferInfo.size
+                    )
+                }
+                mediaDecoderManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
+            }
         }
     }
 }
