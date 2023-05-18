@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import java.nio.ByteBuffer
 
 class MediaExtractorManager {
     // ---------------------------------------------------------------------------------------------
@@ -33,6 +34,20 @@ class MediaExtractorManager {
         _mediaExtractor.release()
     }
 
+    fun extract(destinationBuffer: ByteBuffer): ExtractionResult {
+        val sampleSize: Int = _mediaExtractor.readSampleData(destinationBuffer, 0)
+        val presentationTimeUs: Long
+
+        if (sampleSize < 0) {
+            presentationTimeUs = 0L
+        } else {
+            presentationTimeUs = _mediaExtractor.sampleTime
+            _mediaExtractor.advance()
+        }
+
+        return ExtractionResult(sampleSize, presentationTimeUs)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // private methods.
     private fun findTrackIndex(prefix: String): Int {
@@ -50,3 +65,8 @@ class MediaExtractorManager {
         return trackIndex
     }
 }
+
+data class ExtractionResult(
+    val sampleSize: Int,
+    val presentationTimeUs: Long
+)
