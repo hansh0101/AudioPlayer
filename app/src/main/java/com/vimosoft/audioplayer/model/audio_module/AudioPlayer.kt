@@ -170,15 +170,16 @@ class AudioPlayer(private val context: Context) {
                 val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
                 if (inputBufferInfo.buffer != null) {
                     val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
-                    if (extractionResult.sampleSize < 0) {
-                        isInputEOSReached = true
-                    }
                     mediaCodecManager.deliverFilledInputBuffer(
                         inputBufferInfo.bufferIndex,
                         0,
                         extractionResult.sampleSize,
                         extractionResult.presentationTimeUs
                     )
+
+                    if (extractionResult.sampleSize < 0) {
+                        isInputEOSReached = true
+                    }
                 }
 
                 val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
@@ -187,12 +188,13 @@ class AudioPlayer(private val context: Context) {
                         outputBufferInfo.buffer,
                         outputBufferInfo.info.size
                     )
-                    playbackPosition = outputBufferInfo.info.presentationTimeUs
-                    isOutputEOSReached = outputBufferInfo.isEOS
                     mediaCodecManager.releaseDiscardedOutputBuffer(
                         outputBufferInfo.bufferIndex,
                         false
                     )
+
+                    playbackPosition = outputBufferInfo.info.presentationTimeUs
+                    isOutputEOSReached = outputBufferInfo.isEOS
                 }
 
                 if (isInputEOSReached && isOutputEOSReached) {
