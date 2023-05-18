@@ -39,24 +39,15 @@ class AudioPlayer(private val context: Context) {
      */
     private val mediaExtractorManager: MediaExtractorManager = MediaExtractorManager()
 
-    // TODO - mediaExtractor 객체 자체를 AudioPlayer와 추후 분리해야 한다.
-    private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
-
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
      */
     private val mediaCodecManager: MediaCodecManager = MediaCodecManager()
 
-    // TODO - mediaCodec 객체 자체를 AudioPlayer와 추후 분리해야 한다.
-    private val mediaCodec get() = mediaCodecManager.mediaCodec
-
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
      */
     private val audioTrackManager: AudioTrackManager = AudioTrackManager()
-
-    // TODO - audioTrack 객체 자체를 AudioPlayer와 추후 분리해야 한다.
-    private val audioTrack get() = audioTrackManager.audioTrack
 
     /**
      * 오디오 디코딩 및 재생만을 담당하는 AudioPlayerThread 객체.
@@ -160,10 +151,11 @@ class AudioPlayer(private val context: Context) {
      * AudioPlayerThread 객체를 구성한다.
      */
     private fun configureAudioPlayerThread() {
-        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec, audioTrack) {
-            audioPlayerThread = null
-            release()
-            prepare()
-        }
+        audioPlayerThread =
+            AudioPlayerThread(mediaExtractorManager, mediaCodecManager, audioTrackManager) {
+                audioPlayerThread = null
+                release()
+                prepare()
+            }
     }
 }

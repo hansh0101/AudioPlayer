@@ -1,8 +1,10 @@
 package com.vimosoft.audioplayer.model.audio_module
 
-import android.media.AudioTrack
 import android.media.MediaCodec
 import android.media.MediaExtractor
+import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
 /**
@@ -10,22 +12,27 @@ import timber.log.Timber
  */
 class AudioPlayerThread(
     /**
-     * 미디어 파일을 읽어들일 MediaExtractor 객체.
+     * 미디어 파일을 읽어들일 MediaExtractorManager 객체.
      */
-    private val mediaExtractor: MediaExtractor,
+    private val mediaExtractorManager: MediaExtractorManager,
     /**
-     * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
+     * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder)Manager 객체.
      */
-    private val mediaCodec: MediaCodec,
+    private val mediaCodecManager: MediaCodecManager,
     /**
-     * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
+     * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrackManager 객체.
      */
-    private val audioTrack: AudioTrack,
+    private val audioTrackManager: AudioTrackManager,
     /**
      * 오디오 재생을 마친 후 AudioPlayer 객체 내 audioPlayerThread를 null로 만들어줄 Callback.
      */
     private val onFinish: () -> Unit
 ) : Thread() {
+    // TODO - 나중에 지우긴 해야 하는데 일단 테스트를 위해 빼둔다.
+    private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
+    private val mediaCodec get() = mediaCodecManager.mediaCodec
+    private val audioTrack get() = audioTrackManager.audioTrack
+
     // ---------------------------------------------------------------------------------------------
     // 현재 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
