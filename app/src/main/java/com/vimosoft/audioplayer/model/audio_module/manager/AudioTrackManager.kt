@@ -6,9 +6,13 @@ import android.media.AudioTrack
 import android.media.MediaFormat
 
 class AudioTrackManager {
+    // ---------------------------------------------------------------------------------------------
+    // class variables.
     private lateinit var _audioTrack: AudioTrack
     val audioTrack: AudioTrack get() = _audioTrack
 
+    // ---------------------------------------------------------------------------------------------
+    // public interfaces.
     fun configureAudioTrack(mediaFormat: MediaFormat) {
         val sampleRateInHz = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
@@ -38,6 +42,8 @@ class AudioTrackManager {
             }
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // private methods.
     private fun getChannelConfig(channelCount: Int): Int {
         return when (channelCount) {
             1 -> AudioFormat.CHANNEL_OUT_MONO

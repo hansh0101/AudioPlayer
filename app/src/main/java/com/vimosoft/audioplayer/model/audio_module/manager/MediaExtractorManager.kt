@@ -6,9 +6,13 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 
 class MediaExtractorManager {
+    // ---------------------------------------------------------------------------------------------
+    // class variables.
     private lateinit var _mediaExtractor: MediaExtractor
     val mediaExtractor: MediaExtractor get() = _mediaExtractor
 
+    // ---------------------------------------------------------------------------------------------
+    // public interfaces.
     fun configureMediaExtractor(context: Context, fileName: String, prefix: String): MediaFormat {
         val assetFileDescriptor: AssetFileDescriptor = context.assets.openFd(fileName)
         _mediaExtractor = MediaExtractor().apply {
@@ -25,6 +29,8 @@ class MediaExtractorManager {
         return _mediaExtractor.getTrackFormat(trackIndex)
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // private methods.
     private fun findTrackIndex(prefix: String): Int {
         var trackIndex = -1
         for (i in 0 until _mediaExtractor.trackCount) {

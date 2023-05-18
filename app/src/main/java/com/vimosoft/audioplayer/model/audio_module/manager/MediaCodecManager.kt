@@ -4,9 +4,13 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 
 class MediaCodecManager {
+    // ---------------------------------------------------------------------------------------------
+    // class variables.
     private lateinit var _mediaCodec: MediaCodec
     val mediaCodec: MediaCodec get() = _mediaCodec
 
+    // ---------------------------------------------------------------------------------------------
+    // public interfaces.
     fun configureAudioDecoder(mediaFormat: MediaFormat) {
         val mimeType: String? = mediaFormat.getString(MediaFormat.KEY_MIME)
 
