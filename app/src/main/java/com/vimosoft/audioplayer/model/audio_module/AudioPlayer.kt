@@ -3,7 +3,6 @@ package com.vimosoft.audioplayer.model.audio_module
 import android.content.Context
 import android.media.AudioTrack
 import android.media.MediaCodec
-import android.media.MediaExtractor
 import android.media.MediaFormat
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
@@ -40,7 +39,10 @@ class AudioPlayer(private val context: Context) {
     /**
      * 미디어 파일을 읽어들일 MediaExtractor 객체.
      */
-    private lateinit var mediaExtractor: MediaExtractor
+    private val mediaExtractorManager: MediaExtractorManager = MediaExtractorManager()
+
+    // TODO - mediaExtractor 객체 자체를 AudioPlayer와 추후 분리해야 한다.
+    private val mediaExtractor get() = mediaExtractorManager.mediaExtractor
 
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
@@ -70,11 +72,6 @@ class AudioPlayer(private val context: Context) {
      */
     private lateinit var mediaFormat: MediaFormat
 
-    /**
-     * 미디어 파일 내에서 재생할 트랙의 인덱스 값.
-     */
-    private var trackIndex: Int = 0
-
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer가 외부에 제공하는 public methods.
 
@@ -89,13 +86,10 @@ class AudioPlayer(private val context: Context) {
 
         // MediaExtractor 객체를 구성한다.
         runCatching {
-            MediaExtractorManager.createAudioExtractor(context, this.fileName, "audio/")
-        }.onSuccess { mediaExtractorInfo ->
-            mediaExtractor = mediaExtractorInfo.mediaExtractor
-            trackIndex = mediaExtractorInfo.trackIndex
-
-            mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
-            duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
+            mediaExtractorManager.configureMediaExtractor(context, this.fileName, "audio/")
+        }.onSuccess { mediaFormat ->
+            this.mediaFormat = mediaFormat
+            duration = this.mediaFormat.getLong(MediaFormat.KEY_DURATION)
         }.onFailure {
             Timber.e(it)
         }
