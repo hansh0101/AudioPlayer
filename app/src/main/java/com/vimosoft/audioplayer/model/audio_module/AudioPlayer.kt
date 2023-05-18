@@ -84,7 +84,7 @@ class AudioPlayer(private val context: Context) {
 
         // MediaExtractor 객체를 구성한다.
         runCatching {
-            MediaExtractorManager.create(context, this.fileName, "audio/")
+            MediaExtractorManager.createAudioExtractor(context, this.fileName, "audio/")
         }.onSuccess { mediaExtractorInfo ->
             mediaExtractor = mediaExtractorInfo.mediaExtractor
             trackIndex = mediaExtractorInfo.trackIndex

@@ -11,7 +11,7 @@ class MediaExtractorManager {
          *  `prefix`로 시작하는 MIME type을 가진 트랙을 찾는다. 이후 MediaExtractor 객체와 해당 트랙의 trackIndex를
          *   MediaExtractorInfo로 Wrapping해 반환한다.
          */
-        fun create(context: Context, fileName: String, prefix: String): MediaExtractorInfo {
+        fun createAudioExtractor(context: Context, fileName: String, prefix: String): MediaExtractorInfo {
             val assetFileDescriptor = context.assets.openFd(fileName)
             val mediaExtractor = MediaExtractor().apply {
                 setDataSource(assetFileDescriptor)
