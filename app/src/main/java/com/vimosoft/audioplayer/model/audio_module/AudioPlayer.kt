@@ -135,61 +135,77 @@ class AudioPlayer(private val context: Context) {
 
     private fun configureAudioThread() {
         audioThread = Thread {
-            var isInputEOSReached = false
-            var isOutputEOSReached = false
+            var isInputEOSReached: Boolean
+            var isOutputEOSReached: Boolean
 
             while (!Thread.currentThread().isInterrupted) {
-                synchronized(lock) {
-                    if (!isPlaying) {
-                        try {
-                            lock.wait()
-                        } catch (exception: InterruptedException) {
-                            Timber.e(exception)
-                            return@Thread
-                        }
-                    }
+                try {
+                    waitForPlayback()
+                } catch (exception: InterruptedException) {
+                    Timber.e(exception)
+                    return@Thread
                 }
 
-                val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
-                if (inputBufferInfo.buffer != null) {
-                    val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
-                    mediaCodecManager.deliverFilledInputBuffer(
-                        inputBufferInfo.bufferIndex,
-                        0,
-                        extractionResult.sampleSize,
-                        extractionResult.presentationTimeUs
-                    )
-
-                    if (extractionResult.sampleSize < 0) {
-                        isInputEOSReached = true
-                    }
-                }
-
-                val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
-                if (outputBufferInfo.buffer != null) {
-                    audioTrackManager.outputAudio(
-                        outputBufferInfo.buffer,
-                        outputBufferInfo.info.size
-                    )
-                    mediaCodecManager.releaseDiscardedOutputBuffer(
-                        outputBufferInfo.bufferIndex,
-                        false
-                    )
-
-                    playbackPosition = outputBufferInfo.info.presentationTimeUs
-                    isOutputEOSReached = outputBufferInfo.isEOS
-                }
+                isInputEOSReached = requestDecodeUntilEOS()
+                isOutputEOSReached = handleDecodeResultUntilEOS()
 
                 if (isInputEOSReached && isOutputEOSReached) {
-                    release()
-                    prepare()
-
-                    isPlaying = false
-                    playbackPosition = 0
-                    isInputEOSReached = false
-                    isOutputEOSReached = false
+                    prepareNextTrack()
                 }
             }
         }
+    }
+
+    private fun waitForPlayback() {
+        synchronized(lock) {
+            if (!isPlaying) {
+                lock.wait()
+            }
+        }
+    }
+
+    private fun requestDecodeUntilEOS(): Boolean {
+        val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
+        if (inputBufferInfo.buffer != null) {
+            val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
+            mediaCodecManager.deliverFilledInputBuffer(
+                inputBufferInfo.bufferIndex,
+                0,
+                extractionResult.sampleSize,
+                extractionResult.presentationTimeUs
+            )
+
+            if (extractionResult.sampleSize < 0) {
+                return true
+            }
+            return false
+        }
+        return false
+    }
+
+    private fun handleDecodeResultUntilEOS(): Boolean {
+        val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
+        if (outputBufferInfo.buffer != null) {
+            audioTrackManager.outputAudio(
+                outputBufferInfo.buffer,
+                outputBufferInfo.info.size
+            )
+            mediaCodecManager.releaseDiscardedOutputBuffer(
+                outputBufferInfo.bufferIndex,
+                false
+            )
+
+            playbackPosition = outputBufferInfo.info.presentationTimeUs
+            return outputBufferInfo.isEOS
+        }
+        return false
+    }
+
+    private fun prepareNextTrack() {
+        release()
+        prepare()
+
+        isPlaying = false
+        playbackPosition = 0
     }
 }
