@@ -1,7 +1,6 @@
 package com.vimosoft.audioplayer.model.audio_module
 
 import android.content.Context
-import android.media.AudioTrack
 import android.media.MediaFormat
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
@@ -54,7 +53,10 @@ class AudioPlayer(private val context: Context) {
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
      */
-    private lateinit var audioTrack: AudioTrack
+    private val audioTrackManager: AudioTrackManager = AudioTrackManager()
+
+    // TODO - audioTrack 객체 자체를 AudioPlayer와 추후 분리해야 한다.
+    private val audioTrack get() = audioTrackManager.audioTrack
 
     /**
      * 오디오 디코딩 및 재생만을 담당하는 AudioPlayerThread 객체.
@@ -105,9 +107,7 @@ class AudioPlayer(private val context: Context) {
 
         // AudioTrack 객체를 구성한다.
         runCatching {
-            AudioTrackManager.createAudioTrack(mediaFormat)
-        }.onSuccess { audioTrack ->
-            this.audioTrack = audioTrack
+            audioTrackManager.configureAudioTrack(mediaFormat)
         }.onFailure {
             Timber.e(it)
         }
