@@ -99,25 +99,27 @@ class AudioPlayerThread(
             // 입력 처리
             val inputBufferIndex = mediaDecoder.dequeueInputBuffer(timeOutUs)
             if (inputBufferIndex >= 0) {
-                val destinationBuffer = mediaDecoder.getInputBuffer(inputBufferIndex) ?: break
-                val extractionResult = mediaExtractorManager.extract(destinationBuffer)
-                if (extractionResult.sampleSize < 0) {
-                    isEOS = true
-                    mediaDecoder.queueInputBuffer(
-                        inputBufferIndex,
-                        0,
-                        0,
-                        extractionResult.presentationTimeUs,
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                    )
-                } else {
-                    mediaDecoder.queueInputBuffer(
-                        inputBufferIndex,
-                        0,
-                        extractionResult.sampleSize,
-                        extractionResult.presentationTimeUs,
-                        0
-                    )
+                val destinationBuffer = mediaDecoder.getInputBuffer(inputBufferIndex)
+                if (destinationBuffer != null) {
+                    val extractionResult = mediaExtractorManager.extract(destinationBuffer)
+                    if (extractionResult.sampleSize < 0) {
+                        isEOS = true
+                        mediaDecoder.queueInputBuffer(
+                            inputBufferIndex,
+                            0,
+                            0,
+                            extractionResult.presentationTimeUs,
+                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                        )
+                    } else {
+                        mediaDecoder.queueInputBuffer(
+                            inputBufferIndex,
+                            0,
+                            extractionResult.sampleSize,
+                            extractionResult.presentationTimeUs,
+                            0
+                        )
+                    }
                 }
             }
 
