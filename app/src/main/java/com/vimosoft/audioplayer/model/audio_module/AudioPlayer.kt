@@ -3,7 +3,7 @@ package com.vimosoft.audioplayer.model.audio_module
 import android.content.Context
 import android.media.MediaFormat
 import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
-import com.vimosoft.audioplayer.model.audio_module.manager.MediaDecoderManager
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
@@ -44,7 +44,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
      */
-    private val mediaDecoderManager: MediaDecoderManager = MediaDecoderManager()
+    private val mediaCodecManager: MediaCodecManager = MediaCodecManager()
 
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
@@ -91,7 +91,7 @@ class AudioPlayer(private val context: Context) {
 
         // MediaCodec 객체를 구성한다.
         runCatching {
-            mediaDecoderManager.configureAudioDecoder(mediaFormat)
+            mediaCodecManager.configureAudioDecoder(mediaFormat)
         }.onFailure {
             Timber.e(it)
         }
@@ -131,7 +131,7 @@ class AudioPlayer(private val context: Context) {
      */
     fun seek(playbackPosition: Long) {
         audioTrackManager.flush()
-        mediaDecoderManager.flush()
+        mediaCodecManager.flush()
         mediaExtractorManager.seekTo(playbackPosition)
     }
 
@@ -141,7 +141,7 @@ class AudioPlayer(private val context: Context) {
     fun release() {
         runCatching {
             mediaExtractorManager.release()
-            mediaDecoderManager.release()
+            mediaCodecManager.release()
             audioTrackManager.release()
             audioThread?.interrupt()
             audioThread = null
@@ -167,13 +167,13 @@ class AudioPlayer(private val context: Context) {
                     }
                 }
 
-                val inputBufferInfo = mediaDecoderManager.fetchEmptyInputBuffer()
+                val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
                 if (inputBufferInfo.buffer != null) {
                     val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
                     if (extractionResult.sampleSize < 0) {
                         isInputEOSReached = true
                     }
-                    mediaDecoderManager.deliverFilledInputBuffer(
+                    mediaCodecManager.deliverFilledInputBuffer(
                         inputBufferInfo.bufferIndex,
                         0,
                         extractionResult.sampleSize,
@@ -181,7 +181,7 @@ class AudioPlayer(private val context: Context) {
                     )
                 }
 
-                val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
+                val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
                 if (outputBufferInfo.buffer != null) {
                     audioTrackManager.outputAudio(
                         outputBufferInfo.buffer,
@@ -189,7 +189,7 @@ class AudioPlayer(private val context: Context) {
                     )
                     playbackPosition = outputBufferInfo.info.presentationTimeUs
                     isOutputEOSReached = outputBufferInfo.isEOS
-                    mediaDecoderManager.releaseDiscardedOutputBuffer(
+                    mediaCodecManager.releaseDiscardedOutputBuffer(
                         outputBufferInfo.bufferIndex,
                         false
                     )

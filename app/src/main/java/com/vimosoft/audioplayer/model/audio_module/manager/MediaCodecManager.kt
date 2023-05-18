@@ -4,10 +4,10 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
-class MediaDecoderManager {
+class MediaCodecManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
-    private lateinit var _mediaDecoder: MediaCodec
+    private lateinit var _mediaCodec: MediaCodec
     private val timeoutUs: Long = TIMEOUT_US
     private val bufferInfo = MediaCodec.BufferInfo()
 
@@ -19,7 +19,7 @@ class MediaDecoderManager {
         if (mimeType == null) {
             throw IllegalArgumentException("MIME type is null.")
         } else {
-            _mediaDecoder = MediaCodec.createDecoderByType(mimeType).apply {
+            _mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
                 configure(mediaFormat, null, null, 0)
                 start()
             }
@@ -27,16 +27,16 @@ class MediaDecoderManager {
     }
 
     fun release() {
-        _mediaDecoder.run {
+        _mediaCodec.run {
             stop()
             release()
         }
     }
 
     fun fetchEmptyInputBuffer(): InputBufferInfo {
-        val inputBufferIndex = _mediaDecoder.dequeueInputBuffer(timeoutUs)
+        val inputBufferIndex = _mediaCodec.dequeueInputBuffer(timeoutUs)
         return if (inputBufferIndex >= 0) {
-            val inputBuffer = _mediaDecoder.getInputBuffer(inputBufferIndex)
+            val inputBuffer = _mediaCodec.getInputBuffer(inputBufferIndex)
             InputBufferInfo(inputBufferIndex, inputBuffer)
         } else {
             InputBufferInfo(inputBufferIndex, null)
@@ -50,7 +50,7 @@ class MediaDecoderManager {
         presentationTimeUs: Long,
     ) {
         if (size < 0) {
-            _mediaDecoder.queueInputBuffer(
+            _mediaCodec.queueInputBuffer(
                 bufferIndex,
                 offset,
                 0,
@@ -58,15 +58,15 @@ class MediaDecoderManager {
                 MediaCodec.BUFFER_FLAG_END_OF_STREAM
             )
         } else {
-            _mediaDecoder.queueInputBuffer(bufferIndex, offset, size, presentationTimeUs, 0)
+            _mediaCodec.queueInputBuffer(bufferIndex, offset, size, presentationTimeUs, 0)
         }
     }
 
     fun fetchFilledOutputBuffer(): OutputBufferInfo {
-        val outputBufferIndex = _mediaDecoder.dequeueOutputBuffer(bufferInfo, timeoutUs)
+        val outputBufferIndex = _mediaCodec.dequeueOutputBuffer(bufferInfo, timeoutUs)
         val isEOS = bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
         return if (outputBufferIndex >= 0) {
-            val outputBuffer = _mediaDecoder.getOutputBuffer(outputBufferIndex)
+            val outputBuffer = _mediaCodec.getOutputBuffer(outputBufferIndex)
             OutputBufferInfo(bufferInfo, outputBufferIndex, outputBuffer, isEOS)
         } else {
             OutputBufferInfo(bufferInfo, outputBufferIndex, null, isEOS)
@@ -74,11 +74,11 @@ class MediaDecoderManager {
     }
 
     fun releaseDiscardedOutputBuffer(bufferIndex: Int, render: Boolean) {
-        _mediaDecoder.releaseOutputBuffer(bufferIndex, render)
+        _mediaCodec.releaseOutputBuffer(bufferIndex, render)
     }
 
     fun flush() {
-        _mediaDecoder.flush()
+        _mediaCodec.flush()
     }
 
     companion object {
