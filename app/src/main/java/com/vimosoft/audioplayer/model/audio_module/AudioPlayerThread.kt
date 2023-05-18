@@ -187,6 +187,7 @@ class AudioPlayerThread(
      */
     fun seek(playbackPosition: Long) {
         audioTrack.flush()
+        mediaCodec.flush()
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 
