@@ -71,10 +71,6 @@ class AudioPlayerThread(
     override fun run() {
         isStarted = true
 
-        // MediaCodec에서 Input/Output buffer를 꺼내올 때 timeout의 기준이 되는 마이크로초.
-        val timeOutUs = 10000L
-        // MediaCodec의 버퍼에 대한 메타데이터.
-        val bufferInfo = MediaCodec.BufferInfo()
         // End-Of-Stream에 도달했는지?
         var isEOS = false
 
@@ -95,43 +91,43 @@ class AudioPlayerThread(
             }
 
             // 입력 처리
-            val inputBufferIndex = mediaDecoder.dequeueInputBuffer(timeOutUs)
-            if (inputBufferIndex >= 0) {
-                val destinationBuffer = mediaDecoder.getInputBuffer(inputBufferIndex)
-                if (destinationBuffer != null) {
-                    val extractionResult = mediaExtractorManager.extract(destinationBuffer)
-                    if (extractionResult.sampleSize < 0) {
-                        isEOS = true
-                        mediaDecoder.queueInputBuffer(
-                            inputBufferIndex,
-                            0,
-                            0,
-                            extractionResult.presentationTimeUs,
-                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                        )
-                    } else {
-                        mediaDecoder.queueInputBuffer(
-                            inputBufferIndex,
-                            0,
-                            extractionResult.sampleSize,
-                            extractionResult.presentationTimeUs,
-                            0
-                        )
-                    }
+            val inputBufferInfo = mediaDecoderManager.getInputBuffer()
+            if (inputBufferInfo.buffer != null) {
+                val extractionResult =
+                    mediaExtractorManager.extract(inputBufferInfo.buffer)
+                if (extractionResult.sampleSize < 0) {
+                    isEOS = true
+                    mediaDecoder.queueInputBuffer(
+                        inputBufferInfo.bufferIndex,
+                        0,
+                        0,
+                        extractionResult.presentationTimeUs,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    )
+                } else {
+                    mediaDecoder.queueInputBuffer(
+                        inputBufferInfo.bufferIndex,
+                        0,
+                        extractionResult.sampleSize,
+                        extractionResult.presentationTimeUs,
+                        0
+                    )
                 }
             }
 
             // 출력 처리
-            when (val outputBufferIndex = mediaDecoder.dequeueOutputBuffer(bufferInfo, timeOutUs)) {
+            val outputBufferInfo = mediaDecoderManager.getOutputBuffer()
+            when (outputBufferInfo.bufferIndex) {
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
                 MediaCodec.INFO_TRY_AGAIN_LATER -> {}
                 else -> {
-                    val buffer = mediaDecoder.getOutputBuffer(outputBufferIndex)
-                    if (buffer != null) {
-                        audioTrackManager.outputAudio(buffer, bufferInfo.size)
+                    if (outputBufferInfo.buffer != null) {
+                        audioTrackManager.outputAudio(
+                            outputBufferInfo.buffer,
+                            outputBufferInfo.size
+                        )
                     }
-
-                    mediaDecoder.releaseOutputBuffer(outputBufferIndex, false)
+                    mediaDecoder.releaseOutputBuffer(outputBufferInfo.bufferIndex, false)
                 }
             }
 
