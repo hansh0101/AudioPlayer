@@ -2,6 +2,7 @@ package com.vimosoft.audioplayer.model.audio_module
 
 import android.content.Context
 import android.media.*
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
 /**
@@ -83,7 +84,7 @@ class AudioPlayer(private val context: Context) {
 
         // MediaExtractor 객체를 구성한다.
         runCatching {
-            MediaExtractorManager.configure(context, this.fileName, "audio/")
+            MediaExtractorManager.create(context, this.fileName, "audio/")
         }.onSuccess { mediaExtractorInfo ->
             mediaExtractor = mediaExtractorInfo.mediaExtractor
             trackIndex = mediaExtractorInfo.trackIndex
