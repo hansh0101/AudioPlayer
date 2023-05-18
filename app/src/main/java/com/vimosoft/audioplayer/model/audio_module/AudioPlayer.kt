@@ -2,6 +2,7 @@ package com.vimosoft.audioplayer.model.audio_module
 
 import android.content.Context
 import android.media.*
+import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
 
@@ -40,7 +41,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
      */
-    private var mediaCodec: MediaCodec? = null
+    private lateinit var mediaCodec: MediaCodec
 
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
@@ -95,16 +96,18 @@ class AudioPlayer(private val context: Context) {
             Timber.e(it)
         }
 
+        // MediaCodec 객체를 구성한다.
         runCatching {
-            // MediaExtractor가 추출할 트랙의 MediaFormat
-            val format = mediaExtractor.getTrackFormat(trackIndex)
-            // trackIndex가 유효하다면 해당 인덱스로 MediaExtractor가 추출할 트랙을 설정한다.
-            mediaExtractor.selectTrack(trackIndex)
+            MediaCodecManager.createAudioDecoder(mediaFormat)
+        }.onSuccess { mediaCodecDecoder ->
+            this.mediaCodec = mediaCodecDecoder
+        }.onFailure {
+            Timber.e(it)
+        }
 
-            // MediaCodec 객체를 구성한다.
-            configureMediaCodec(format)
+        runCatching {
             // AudioTrack 객체를 구성한다.
-            configureAudioTrack(format)
+            configureAudioTrack(mediaFormat)
         }.onFailure { Timber.e(it) }
     }
 
@@ -143,29 +146,16 @@ class AudioPlayer(private val context: Context) {
      */
     fun release() {
         runCatching {
-            mediaCodec?.stop()
+            mediaCodec.stop()
             audioTrack?.stop()
 
-            mediaCodec?.release()
+            mediaCodec.release()
             mediaExtractor.release()
             audioTrack?.release()
 
             audioPlayerThread?.interrupt()
             audioPlayerThread = null
         }.onFailure { Timber.e(it) }
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // AudioPlayer 내부에서만 사용되는 private methods.
-    /**
-     * MediaCodec 객체를 구성한다.
-     */
-    private fun configureMediaCodec(format: MediaFormat) {
-        val mimeType = format.getString(MediaFormat.KEY_MIME)
-        mediaCodec = MediaCodec.createDecoderByType(mimeType!!).apply {
-            configure(format, null, null, 0)
-            start()
-        }
     }
 
     /**
@@ -214,11 +204,11 @@ class AudioPlayer(private val context: Context) {
      * AudioPlayerThread 객체를 구성한다.
      */
     private fun configureAudioPlayerThread() {
-        if (mediaCodec == null || audioTrack == null) {
+        if (audioTrack == null) {
             return
         }
 
-        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec!!, audioTrack!!) {
+        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec, audioTrack!!) {
             audioPlayerThread = null
             release()
             prepare()
