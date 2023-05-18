@@ -1,7 +1,11 @@
 package com.vimosoft.audioplayer.model.audio_module
 
 import android.content.Context
-import android.media.*
+import android.media.AudioTrack
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
 import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
 import timber.log.Timber
@@ -46,7 +50,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
      */
-    private var audioTrack: AudioTrack? = null
+    private lateinit var audioTrack: AudioTrack
 
     /**
      * 오디오 디코딩 및 재생만을 담당하는 AudioPlayerThread 객체.
@@ -105,10 +109,14 @@ class AudioPlayer(private val context: Context) {
             Timber.e(it)
         }
 
+        // AudioTrack 객체를 구성한다.
         runCatching {
-            // AudioTrack 객체를 구성한다.
-            configureAudioTrack(mediaFormat)
-        }.onFailure { Timber.e(it) }
+            AudioTrackManager.createAudioTrack(mediaFormat)
+        }.onSuccess { audioTrack ->
+            this.audioTrack = audioTrack
+        }.onFailure {
+            Timber.e(it)
+        }
     }
 
     /**
@@ -147,11 +155,11 @@ class AudioPlayer(private val context: Context) {
     fun release() {
         runCatching {
             mediaCodec.stop()
-            audioTrack?.stop()
+            audioTrack.stop()
 
             mediaCodec.release()
             mediaExtractor.release()
-            audioTrack?.release()
+            audioTrack.release()
 
             audioPlayerThread?.interrupt()
             audioPlayerThread = null
@@ -159,56 +167,10 @@ class AudioPlayer(private val context: Context) {
     }
 
     /**
-     * AudioTrack 객체를 구성한다.
-     */
-    private fun configureAudioTrack(format: MediaFormat) {
-        val sampleRateInHz = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-        val channelConfig =
-            when (val channelCount = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)) {
-                1 -> AudioFormat.CHANNEL_OUT_MONO
-                2 -> AudioFormat.CHANNEL_OUT_STEREO
-                3 -> AudioFormat.CHANNEL_OUT_STEREO or AudioFormat.CHANNEL_OUT_FRONT_CENTER
-                4 -> AudioFormat.CHANNEL_OUT_QUAD
-                5 -> AudioFormat.CHANNEL_OUT_QUAD or AudioFormat.CHANNEL_OUT_FRONT_CENTER
-                6 -> AudioFormat.CHANNEL_OUT_5POINT1
-                7 -> AudioFormat.CHANNEL_OUT_5POINT1 or AudioFormat.CHANNEL_OUT_BACK_CENTER
-                8 -> AudioFormat.CHANNEL_OUT_7POINT1_SURROUND
-                else -> throw IllegalArgumentException("Illegal channelCount argument : $channelCount")
-            }
-        val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
-        val bufferSizeInBytes =
-            AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
-
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_MEDIA)
-            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-            .build()
-
-        val audioFormat = AudioFormat.Builder()
-            .setChannelMask(channelConfig)
-            .setEncoding(audioEncodingFormat)
-            .setSampleRate(sampleRateInHz)
-            .build()
-
-        audioTrack = AudioTrack.Builder()
-            .setAudioAttributes(audioAttributes)
-            .setAudioFormat(audioFormat)
-            .setBufferSizeInBytes(bufferSizeInBytes)
-            .setTransferMode(AudioTrack.MODE_STREAM)
-            .build().apply {
-                play()
-            }
-    }
-
-    /**
      * AudioPlayerThread 객체를 구성한다.
      */
     private fun configureAudioPlayerThread() {
-        if (audioTrack == null) {
-            return
-        }
-
-        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec, audioTrack!!) {
+        audioPlayerThread = AudioPlayerThread(mediaExtractor, mediaCodec, audioTrack) {
             audioPlayerThread = null
             release()
             prepare()
