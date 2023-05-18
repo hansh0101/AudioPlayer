@@ -29,6 +29,10 @@ class MediaExtractorManager {
         return _mediaExtractor.getTrackFormat(trackIndex)
     }
 
+    fun release() {
+        _mediaExtractor.release()
+    }
+
     // ---------------------------------------------------------------------------------------------
     // private methods.
     private fun findTrackIndex(prefix: String): Int {

@@ -23,4 +23,11 @@ class MediaCodecManager {
             }
         }
     }
+
+    fun release() {
+        _mediaCodec.run {
+            stop()
+            release()
+        }
+    }
 }

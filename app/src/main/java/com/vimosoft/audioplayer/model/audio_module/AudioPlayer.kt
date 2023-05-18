@@ -148,16 +148,12 @@ class AudioPlayer(private val context: Context) {
      */
     fun release() {
         runCatching {
-            mediaCodec.stop()
-            audioTrack.stop()
-
-            mediaCodec.release()
-            mediaExtractor.release()
-            audioTrack.release()
-
-            audioPlayerThread?.interrupt()
-            audioPlayerThread = null
-        }.onFailure { Timber.e(it) }
+            mediaExtractorManager.release()
+            mediaCodecManager.release()
+            audioTrackManager.release()
+        }.onFailure {
+            Timber.e(it)
+        }
     }
 
     /**

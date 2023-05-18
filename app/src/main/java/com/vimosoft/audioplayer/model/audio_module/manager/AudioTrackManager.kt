@@ -42,6 +42,13 @@ class AudioTrackManager {
             }
     }
 
+    fun release() {
+        _audioTrack.run {
+            stop()
+            release()
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------
     // private methods.
     private fun getChannelConfig(channelCount: Int): Int {
