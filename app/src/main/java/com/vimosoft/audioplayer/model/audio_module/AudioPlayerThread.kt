@@ -68,11 +68,12 @@ class AudioPlayerThread(
         isStarted = true
 
         // End-Of-Stream에 도달했는지?
-        var isEOS = false
+        var isInputEOS = false
+        var isOutputEOS = false
 
         // 미디어 파일을 디코딩해 재생한다.
         // 미디어 파일의 EOS에 도달하지 않았고, 스레드가 인터럽트되지 않은 경우 수행한다.
-        while (!isEOS && !isInterrupted) {
+        while (!isInputEOS && !isOutputEOS && !isInterrupted) {
             // 일시정지를 위한 synchronized 블록
             synchronized(lock) {
                 while (!isPlaying) {
@@ -87,10 +88,10 @@ class AudioPlayerThread(
             }
 
             // 입력 처리
-            isEOS = handleInputData()
+            isInputEOS = handleInputData()
 
             // 출력 처리
-            handleOutputData()
+            isOutputEOS = handleOutputData()
         }
 
         // 종료 후 onFinsh 콜백 메서드 호출
@@ -177,7 +178,9 @@ class AudioPlayerThread(
     /**
      * 오디오 파일 출력을 처리한다.
      */
-    private fun handleOutputData() {
+    private fun handleOutputData(): Boolean {
+        var isEOS = false
+
         val outputBufferInfo = mediaDecoderManager.fetchFilledOutputBuffer()
         when (outputBufferInfo.bufferIndex) {
             MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
@@ -190,8 +193,14 @@ class AudioPlayerThread(
                     )
                 }
                 playbackPosition = outputBufferInfo.info.presentationTimeUs
-                mediaDecoderManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
+                isEOS = outputBufferInfo.info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+                mediaDecoderManager.releaseDiscardedOutputBuffer(
+                    outputBufferInfo.bufferIndex,
+                    false
+                )
             }
         }
+
+        return isEOS
     }
 }
