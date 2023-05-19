@@ -39,20 +39,23 @@ class AudioPlayer(private val context: Context) {
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
 
     /**
-     * 미디어 파일을 읽어들일 MediaExtractor 객체.
+     * MediaExtractor 초기화, 해제, 미디어 파일 추출, 재생 위치 조정 등의 작업을 담당하는 MediaExtractorManager 객체.
      */
     private val mediaExtractorManager: MediaExtractorManager = MediaExtractorManager()
 
     /**
-     * 압축된 오디오 파일을 디코딩할 MediaCodec(decoder) 객체.
+     * MediaCodec 초기화, 해제, 입출력 버퍼 제공 및 회수, 인코딩/디코딩 등의 작업을 담당하는 MediaCodecManager 객체.
      */
     private val mediaCodecManager: MediaCodecManager = MediaCodecManager()
 
     /**
-     * 디코딩된 오디오 파일을 디바이스 스피커로 출력할 AudioTrack 객체.
+     * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
     private val audioTrackManager: AudioTrackManager = AudioTrackManager()
 
+    /**
+     * 오디오를 재생하는 스레드를
+     */
     private val lock = Object()
     private var audioThread: Thread? = null
 
@@ -81,15 +84,16 @@ class AudioPlayer(private val context: Context) {
             this.fileName = fileName
         }
 
-        // MediaExtractor 객체를 구성한다.
+        // TODO - MediaExtractorManager가 꼭 Context를 알아야 할까? 에 대해 생각해보자.
+        // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
         mediaFormat =
             mediaExtractorManager.configureMediaExtractor(context, this.fileName, "audio/")
         duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
 
-        // MediaCodec 객체를 구성한다.
+        // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
         mediaCodecManager.configureAudioDecoder(mediaFormat)
 
-        // AudioTrack 객체를 구성한다.
+        // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
         audioTrackManager.configureAudioTrack(mediaFormat)
     }
 
@@ -97,6 +101,7 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 시작한다.
      */
     fun play() {
+        // TODO - 조건이 이상하다. 다시 생각해볼 것.
         if (audioThread?.isAlive != true || audioThread?.isInterrupted == true) {
             configureAudioThread()
             audioThread?.start()
@@ -112,7 +117,9 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 중지한다.
      */
     fun pause() {
-        isPlaying = false
+        synchronized(lock) {
+            isPlaying = false
+        }
     }
 
     /**
@@ -135,12 +142,17 @@ class AudioPlayer(private val context: Context) {
         audioThread = null
     }
 
+    /**
+     * 오디오 파일 추출, 디코딩, 재생을 처리하는 Thread 객체를 구성한다.
+     */
     private fun configureAudioThread() {
         audioThread = Thread {
             var isInputEOSReached: Boolean
             var isOutputEOSReached: Boolean
 
+            // TODO - while문의 조건이 이게 맞나?
             while (!Thread.currentThread().isInterrupted) {
+                // 일시정지 상태라면 재생 상태가 될 때까지 Thread의 State를 WAITING으로 만든다.
                 try {
                     waitForPlayback()
                 } catch (exception: InterruptedException) {
@@ -151,6 +163,7 @@ class AudioPlayer(private val context: Context) {
                 isInputEOSReached = requestDecodeUntilEOS()
                 isOutputEOSReached = handleDecodeResultUntilEOS()
 
+                // Input, Output data 모두 EOS에 도달했다면 다음 트랙 재생을 준비한다.
                 if (isInputEOSReached && isOutputEOSReached) {
                     prepareNextTrack()
                 }
@@ -158,6 +171,9 @@ class AudioPlayer(private val context: Context) {
         }
     }
 
+    /**
+     * 일시정지 시 오디오를 재생하는 스레드를 WAITING 상태로 만든다.
+     */
     private fun waitForPlayback() {
         synchronized(lock) {
             if (!isPlaying) {
@@ -166,6 +182,9 @@ class AudioPlayer(private val context: Context) {
         }
     }
 
+    /**
+     * MediaCodecManager에 오디오 파일 디코딩을 요청한다.
+     */
     private fun requestDecodeUntilEOS(): Boolean {
         val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
         if (inputBufferInfo.buffer != null) {
@@ -184,6 +203,9 @@ class AudioPlayer(private val context: Context) {
         return false
     }
 
+    /**
+     * MediaCodecManager가 수행한 디코딩 결과를 처리한다.
+     */
     private fun handleDecodeResultUntilEOS(): Boolean {
         val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
         if (outputBufferInfo.buffer != null) {
@@ -196,10 +218,12 @@ class AudioPlayer(private val context: Context) {
         return false
     }
 
+    /**
+     * 다음 트랙 재생을 준비한다.
+     */
     private fun prepareNextTrack() {
         release()
         prepare()
-
         isPlaying = false
         playbackPosition = 0
     }
