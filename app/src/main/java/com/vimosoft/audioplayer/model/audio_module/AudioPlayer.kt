@@ -178,7 +178,6 @@ class AudioPlayer(private val context: Context) {
             if (extractionResult.sampleSize < 0) {
                 return true
             }
-            return false
         }
         return false
     }
@@ -186,14 +185,8 @@ class AudioPlayer(private val context: Context) {
     private fun handleDecodeResultUntilEOS(): Boolean {
         val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
         if (outputBufferInfo.buffer != null) {
-            audioTrackManager.outputAudio(
-                outputBufferInfo.buffer,
-                outputBufferInfo.info.size
-            )
-            mediaCodecManager.releaseDiscardedOutputBuffer(
-                outputBufferInfo.bufferIndex,
-                false
-            )
+            audioTrackManager.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
+            mediaCodecManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
 
             playbackPosition = outputBufferInfo.info.presentationTimeUs
             return outputBufferInfo.isEOS

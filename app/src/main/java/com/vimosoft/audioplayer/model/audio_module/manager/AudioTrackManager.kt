@@ -9,7 +9,7 @@ import java.nio.ByteBuffer
 class AudioTrackManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
-    private lateinit var _audioTrack: AudioTrack
+    private lateinit var audioTrack: AudioTrack
 
     // ---------------------------------------------------------------------------------------------
     // public interfaces.
@@ -31,7 +31,7 @@ class AudioTrackManager {
             .setSampleRate(sampleRateInHz)
             .build()
 
-        _audioTrack = AudioTrack.Builder()
+        audioTrack = AudioTrack.Builder()
             .setAudioAttributes(audioAttributes)
             .setAudioFormat(audioFormat)
             .setBufferSizeInBytes(bufferSizeInBytes)
@@ -43,7 +43,7 @@ class AudioTrackManager {
     }
 
     fun release() {
-        _audioTrack.run {
+        audioTrack.run {
             stop()
             release()
         }
@@ -55,12 +55,12 @@ class AudioTrackManager {
         outputBuffer.clear()
 
         if (chunk.isNotEmpty()) {
-            _audioTrack.write(chunk, 0, chunk.size)
+            audioTrack.write(chunk, 0, chunk.size)
         }
     }
 
     fun flush() {
-        _audioTrack.flush()
+        audioTrack.flush()
     }
 
     // ---------------------------------------------------------------------------------------------

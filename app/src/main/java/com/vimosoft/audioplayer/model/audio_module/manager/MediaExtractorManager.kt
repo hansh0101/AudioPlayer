@@ -9,14 +9,13 @@ import java.nio.ByteBuffer
 class MediaExtractorManager {
     // ---------------------------------------------------------------------------------------------
     // class variables.
-    private lateinit var _mediaExtractor: MediaExtractor
-    val mediaExtractor: MediaExtractor get() = _mediaExtractor
+    private lateinit var mediaExtractor: MediaExtractor
 
     // ---------------------------------------------------------------------------------------------
     // public interfaces.
     fun configureMediaExtractor(context: Context, fileName: String, prefix: String): MediaFormat {
         val assetFileDescriptor: AssetFileDescriptor = context.assets.openFd(fileName)
-        _mediaExtractor = MediaExtractor().apply {
+        mediaExtractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
         }
         assetFileDescriptor.close()
@@ -25,39 +24,39 @@ class MediaExtractorManager {
         if (trackIndex == -1) {
             throw IllegalStateException("There is no $prefix MIME type track.")
         }
-        _mediaExtractor.selectTrack(trackIndex)
+        mediaExtractor.selectTrack(trackIndex)
 
-        return _mediaExtractor.getTrackFormat(trackIndex)
+        return mediaExtractor.getTrackFormat(trackIndex)
     }
 
     fun release() {
-        _mediaExtractor.release()
+        mediaExtractor.release()
     }
 
     fun extract(destinationBuffer: ByteBuffer): ExtractionResult {
-        val sampleSize: Int = _mediaExtractor.readSampleData(destinationBuffer, 0)
+        val sampleSize: Int = mediaExtractor.readSampleData(destinationBuffer, 0)
         val presentationTimeUs: Long
 
         if (sampleSize < 0) {
             presentationTimeUs = 0L
         } else {
-            presentationTimeUs = _mediaExtractor.sampleTime
-            _mediaExtractor.advance()
+            presentationTimeUs = mediaExtractor.sampleTime
+            mediaExtractor.advance()
         }
 
         return ExtractionResult(sampleSize, presentationTimeUs)
     }
 
     fun seekTo(playbackPosition: Long) {
-        _mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+        mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 
     // ---------------------------------------------------------------------------------------------
     // private methods.
     private fun findTrackIndex(prefix: String): Int {
         var trackIndex = -1
-        for (i in 0 until _mediaExtractor.trackCount) {
-            val mediaFormat: MediaFormat = _mediaExtractor.getTrackFormat(i)
+        for (i in 0 until mediaExtractor.trackCount) {
+            val mediaFormat: MediaFormat = mediaExtractor.getTrackFormat(i)
             val mimeType: String? = mediaFormat.getString(MediaFormat.KEY_MIME)
 
             if (mimeType?.startsWith(prefix) == true) {
