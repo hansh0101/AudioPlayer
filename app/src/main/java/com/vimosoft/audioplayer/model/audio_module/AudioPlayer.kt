@@ -142,6 +142,9 @@ class AudioPlayer(private val context: Context) {
         audioThread = null
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // AudioPlayer 내부적으로 사용하는 private methods.
+
     /**
      * 오디오 파일 추출, 디코딩, 재생을 처리하는 Thread 객체를 구성한다.
      */
