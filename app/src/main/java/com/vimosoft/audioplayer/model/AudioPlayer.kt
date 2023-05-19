@@ -1,10 +1,10 @@
-package com.vimosoft.audioplayer.model.audio_module
+package com.vimosoft.audioplayer.model
 
 import android.content.Context
 import android.media.MediaFormat
-import com.vimosoft.audioplayer.model.audio_module.manager.AudioTrackManager
-import com.vimosoft.audioplayer.model.audio_module.manager.MediaCodecManager
-import com.vimosoft.audioplayer.model.audio_module.manager.MediaExtractorManager
+import com.vimosoft.audioplayer.model.manager.AudioTrackManager
+import com.vimosoft.audioplayer.model.manager.MediaCodecManager
+import com.vimosoft.audioplayer.model.manager.MediaExtractorManager
 import timber.log.Timber
 
 /**
