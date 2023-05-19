@@ -68,7 +68,7 @@ class AudioPlayer(private val context: Context) {
     private var fileName: String = ""
 
     /**
-     * 미디어 파일의 포맷
+     * 미디어 파일의 포맷.
      */
     private lateinit var mediaFormat: MediaFormat
 

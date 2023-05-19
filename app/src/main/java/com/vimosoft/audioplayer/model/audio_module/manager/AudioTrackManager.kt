@@ -6,13 +6,24 @@ import android.media.AudioTrack
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
+/**
+ * 소리를 출력하기 위해 AudioTrack을 통해 PCM 데이터를 재생하는 작업을 전반적으로 담당하는 객체.
+ */
 class AudioTrackManager {
     // ---------------------------------------------------------------------------------------------
-    // class variables.
+    // AudioTrackManager 사용에 필요한 private variables.
+
+    /**
+     * 소리를 출력하는 AudioTrack 객체.
+     */
     private lateinit var audioTrack: AudioTrack
 
     // ---------------------------------------------------------------------------------------------
-    // public interfaces.
+    // AudioTrackManager가 외부에 제공하는 public methods.
+
+    /**
+     * AudioTrack 객체를 구성한다.
+     */
     fun configureAudioTrack(mediaFormat: MediaFormat) {
         val sampleRateInHz = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
@@ -42,6 +53,9 @@ class AudioTrackManager {
             }
     }
 
+    /**
+     * AudioTrackManager 사용을 마친 후 리소스를 정리한다.
+     */
     fun release() {
         audioTrack.run {
             stop()
@@ -49,6 +63,9 @@ class AudioTrackManager {
         }
     }
 
+    /**
+     * AudioTrack 객체를 사용해 버퍼의 데이터를 소리로 출력한다.
+     */
     fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
         val chunk = ByteArray(size)
         outputBuffer.get(chunk)
@@ -59,12 +76,19 @@ class AudioTrackManager {
         }
     }
 
+    /**
+     * AudioTrack 객체 내부 버퍼를 flush한다.
+     */
     fun flush() {
         audioTrack.flush()
     }
 
     // ---------------------------------------------------------------------------------------------
-    // private methods.
+    // AudioTrackManager 내부적으로 사용하는 private methods.
+
+    /**
+     * 채널 수에 대한 채널 마스크 Int 값을 반환한다.
+     */
     private fun getChannelConfig(channelCount: Int): Int {
         return when (channelCount) {
             1 -> AudioFormat.CHANNEL_OUT_MONO

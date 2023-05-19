@@ -6,13 +6,25 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
+/**
+ * 미디어 파일을 재생하기 위해 MediaExtractor를 통해 압축된 미디어 파일을 읽어오는 작업을 전반적으로 담당하는 객체.
+ */
 class MediaExtractorManager {
     // ---------------------------------------------------------------------------------------------
-    // class variables.
+    // MediaExtractorManager 사용에 필요한 private variables.
+
+    /**
+     * 미디어 파일을 추출하는 MediaExtractor 객체.
+     */
     private lateinit var mediaExtractor: MediaExtractor
 
     // ---------------------------------------------------------------------------------------------
-    // public interfaces.
+    // MediaExtractorManager가 외부에 제공하는 public methods.
+
+    // TODO - MediaExtractorManager가 꼭 Context를 알아야 할까? 에 대해 생각해보자.
+    /**
+     * MediaExtractor 객체를 구성하고 재생할 트랙의 MediaFormat을 반환한다.
+     */
     fun configureMediaExtractor(context: Context, fileName: String, prefix: String): MediaFormat {
         val assetFileDescriptor: AssetFileDescriptor = context.assets.openFd(fileName)
         mediaExtractor = MediaExtractor().apply {
@@ -29,10 +41,17 @@ class MediaExtractorManager {
         return mediaExtractor.getTrackFormat(trackIndex)
     }
 
+    /**
+     * MediaExtractorManager 사용을 마친 후 리소스를 정리한다.
+     */
     fun release() {
         mediaExtractor.release()
     }
 
+    /**
+     * MediaExtractor 객체를 사용해 미디어 파일을 읽어들여 destinationBuffer에 데이터를 쓰고 읽어온 데이터의 크기,
+     * 현재 파일의 위치를 ExtractionResult 객체로 반환한다.
+     */
     fun extract(destinationBuffer: ByteBuffer): ExtractionResult {
         val sampleSize: Int = mediaExtractor.readSampleData(destinationBuffer, 0)
         val presentationTimeUs: Long
@@ -47,12 +66,19 @@ class MediaExtractorManager {
         return ExtractionResult(sampleSize, presentationTimeUs)
     }
 
+    /**
+     * 미디어 파일을 읽어올 위치를 조정한다.
+     */
     fun seekTo(playbackPosition: Long) {
         mediaExtractor.seekTo(playbackPosition, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
     }
 
     // ---------------------------------------------------------------------------------------------
-    // private methods.
+    // MediaExtractorManager 내부적으로 사용하는 private methods.
+
+    /**
+     * 주어진 prefix에 해당하는 MIME 타입의 트랙 인덱스를 반환한다.
+     */
     private fun findTrackIndex(prefix: String): Int {
         var trackIndex = -1
         for (i in 0 until mediaExtractor.trackCount) {
@@ -69,6 +95,9 @@ class MediaExtractorManager {
     }
 }
 
+/**
+ * 미디어 파일 추출 결과를 담는 객체.
+ */
 data class ExtractionResult(
     val sampleSize: Int,
     val presentationTimeUs: Long
