@@ -1,6 +1,5 @@
 package com.vimosoft.audioplayer.model.audio_module.manager
 
-import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -25,8 +24,10 @@ class MediaExtractorManager {
     /**
      * MediaExtractor 객체를 구성하고 재생할 트랙의 MediaFormat을 반환한다.
      */
-    fun configureMediaExtractor(context: Context, fileName: String, prefix: String): MediaFormat {
-        val assetFileDescriptor: AssetFileDescriptor = context.assets.openFd(fileName)
+    fun configureMediaExtractor(
+        assetFileDescriptor: AssetFileDescriptor,
+        prefix: String
+    ): MediaFormat {
         mediaExtractor = MediaExtractor().apply {
             setDataSource(assetFileDescriptor)
         }

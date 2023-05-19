@@ -84,10 +84,11 @@ class AudioPlayer(private val context: Context) {
             this.fileName = fileName
         }
 
-        // TODO - MediaExtractorManager가 꼭 Context를 알아야 할까? 에 대해 생각해보자.
         // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
-        mediaFormat =
-            mediaExtractorManager.configureMediaExtractor(context, this.fileName, "audio/")
+        mediaFormat = mediaExtractorManager.configureMediaExtractor(
+            context.assets.openFd(this.fileName),
+            "audio/"
+        )
         duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
