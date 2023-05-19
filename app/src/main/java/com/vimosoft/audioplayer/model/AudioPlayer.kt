@@ -195,10 +195,10 @@ class AudioPlayer(private val context: Context) {
      * MediaCodecManager에 오디오 파일 디코딩을 요청한다.
      */
     private fun requestDecodeUntilEOS(): Boolean {
-        val inputBufferInfo = mediaCodecManager.fetchEmptyInputBuffer()
+        val inputBufferInfo = mediaCodecManager.assignInputBuffer()
         if (inputBufferInfo.buffer != null) {
             val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
-            mediaCodecManager.deliverFilledInputBuffer(
+            mediaCodecManager.submitInputBuffer(
                 inputBufferInfo.bufferIndex,
                 0,
                 extractionResult.sampleSize,
@@ -216,10 +216,10 @@ class AudioPlayer(private val context: Context) {
      * MediaCodecManager가 수행한 디코딩 결과를 처리한다.
      */
     private fun handleDecodeResultUntilEOS(): Boolean {
-        val outputBufferInfo = mediaCodecManager.fetchFilledOutputBuffer()
+        val outputBufferInfo = mediaCodecManager.getOutputBuffer()
         if (outputBufferInfo.buffer != null) {
             audioTrackManager.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
-            mediaCodecManager.releaseDiscardedOutputBuffer(outputBufferInfo.bufferIndex, false)
+            mediaCodecManager.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
 
             playbackPosition = outputBufferInfo.info.presentationTimeUs
             return outputBufferInfo.isEOS

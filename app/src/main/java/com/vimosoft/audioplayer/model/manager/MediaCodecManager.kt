@@ -58,7 +58,7 @@ class MediaCodecManager {
     /**
      * MediaCodec의 빈 입력 버퍼와 버퍼 인덱스를 InputBufferInfo로 반환한다.
      */
-    fun fetchEmptyInputBuffer(): InputBufferInfo {
+    fun assignInputBuffer(): InputBufferInfo {
         val inputBufferIndex = mediaCodec.dequeueInputBuffer(timeoutUs)
         return if (inputBufferIndex >= 0) {
             val inputBuffer = mediaCodec.getInputBuffer(inputBufferIndex)
@@ -71,7 +71,7 @@ class MediaCodecManager {
     /**
      * 인코딩/디코딩을 위해 MediaCodec에 데이터로 채워진 입력 버퍼 처리를 요청한다.
      */
-    fun deliverFilledInputBuffer(
+    fun submitInputBuffer(
         bufferIndex: Int,
         offset: Int,
         size: Int,
@@ -94,7 +94,7 @@ class MediaCodecManager {
      * MediaCodec이 인코딩/디코딩한 출력 데이터를 담은 출력 버퍼와 버퍼 인덱스, 버퍼 메타데이터 및 EOS 도달 여부를
      * OutputBufferInfo로 반환한다.
      */
-    fun fetchFilledOutputBuffer(): OutputBufferInfo {
+    fun getOutputBuffer(): OutputBufferInfo {
         val outputBufferIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, timeoutUs)
         val isEOS = bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
         return if (outputBufferIndex >= 0) {
@@ -108,7 +108,7 @@ class MediaCodecManager {
     /**
      * 인코딩/디코딩된 출력 데이터를 사용한 후 MediaCodec에 출력 버퍼를 반납한다.
      */
-    fun releaseDiscardedOutputBuffer(bufferIndex: Int, render: Boolean) {
+    fun giveBackOutputBuffer(bufferIndex: Int, render: Boolean) {
         mediaCodec.releaseOutputBuffer(bufferIndex, render)
     }
 
