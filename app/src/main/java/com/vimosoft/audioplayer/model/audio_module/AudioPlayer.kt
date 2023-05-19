@@ -20,6 +20,7 @@ class AudioPlayer(private val context: Context) {
      */
     @Volatile
     var isPlaying: Boolean = false
+        private set
 
     /**
      * 오디오 파일의 길이(단위 - microsecond) 값.
@@ -32,6 +33,7 @@ class AudioPlayer(private val context: Context) {
      */
     @Volatile
     var playbackPosition: Long = 0L
+        private set
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
