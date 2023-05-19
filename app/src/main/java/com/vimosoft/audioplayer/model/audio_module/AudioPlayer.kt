@@ -102,10 +102,8 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 시작한다.
      */
     fun play() {
-        // TODO - 조건이 이상하다. 다시 생각해볼 것.
-        if (audioThread?.isAlive != true || audioThread?.isInterrupted == true) {
+        if (audioThread == null || audioThread?.isInterrupted == true) {
             configureAudioThread()
-            audioThread?.start()
         }
 
         synchronized(lock) {
@@ -182,7 +180,7 @@ class AudioPlayer(private val context: Context) {
                     isOutputEOSReached = false
                 }
             }
-        }
+        }.apply { start() }
     }
 
     /**
@@ -236,7 +234,9 @@ class AudioPlayer(private val context: Context) {
      * 다음 트랙 재생을 준비한다.
      */
     private fun prepareNextTrack() {
-        release()
+        mediaExtractorManager.release()
+        mediaCodecManager.release()
+        audioTrackManager.release()
         prepare()
         isPlaying = false
         playbackPosition = 0
