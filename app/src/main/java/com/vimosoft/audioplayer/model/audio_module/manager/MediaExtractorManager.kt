@@ -20,7 +20,6 @@ class MediaExtractorManager {
     // ---------------------------------------------------------------------------------------------
     // MediaExtractorManager가 외부에 제공하는 public methods.
 
-    // TODO - MediaExtractorManager가 꼭 Context를 알아야 할까? 에 대해 생각해보자.
     /**
      * MediaExtractor 객체를 구성하고 재생할 트랙의 MediaFormat을 반환한다.
      */
