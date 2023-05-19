@@ -23,7 +23,7 @@ class MediaExtractorManager {
     /**
      * MediaExtractor 객체를 구성하고 재생할 트랙의 MediaFormat을 반환한다.
      */
-    fun configureMediaExtractor(
+    fun configure(
         assetFileDescriptor: AssetFileDescriptor,
         prefix: String
     ): MediaFormat {

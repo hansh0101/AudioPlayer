@@ -24,7 +24,7 @@ class AudioTrackManager {
     /**
      * AudioTrack 객체를 구성한다.
      */
-    fun configureAudioTrack(mediaFormat: MediaFormat) {
+    fun configure(mediaFormat: MediaFormat) {
         val sampleRateInHz = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
         val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT

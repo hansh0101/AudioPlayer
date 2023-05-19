@@ -85,17 +85,15 @@ class AudioPlayer(private val context: Context) {
         }
 
         // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
-        mediaFormat = mediaExtractorManager.configureMediaExtractor(
-            context.assets.openFd(this.fileName),
-            "audio/"
-        )
+        mediaFormat =
+            mediaExtractorManager.configure(context.assets.openFd(this.fileName), "audio/")
         duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
-        mediaCodecManager.configureAudioDecoder(mediaFormat)
+        mediaCodecManager.configureDecoder(mediaFormat)
 
         // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
-        audioTrackManager.configureAudioTrack(mediaFormat)
+        audioTrackManager.configure(mediaFormat)
     }
 
     /**

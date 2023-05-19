@@ -32,7 +32,7 @@ class MediaCodecManager {
     /**
      * MediaCodec 객체를 구성하고 시작 가능한 상태로 만든다.
      */
-    fun configureAudioDecoder(mediaFormat: MediaFormat) {
+    fun configureDecoder(mediaFormat: MediaFormat) {
         val mimeType: String? = mediaFormat.getString(MediaFormat.KEY_MIME)
 
         if (mimeType == null) {
