@@ -154,7 +154,6 @@ class AudioPlayer(private val context: Context) {
             // Output data가 EOS에 도달했는지를 나타내는 Boolean 값.
             var isOutputEOSReached = false
 
-            // TODO - while문의 조건이 이게 맞나?
             while (!Thread.currentThread().isInterrupted) {
                 // 일시정지 상태라면 재생 상태가 될 때까지 Thread의 State를 WAITING으로 만든다.
                 try {
