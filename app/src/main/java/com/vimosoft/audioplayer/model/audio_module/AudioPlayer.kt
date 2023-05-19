@@ -147,8 +147,10 @@ class AudioPlayer(private val context: Context) {
      */
     private fun configureAudioThread() {
         audioThread = Thread {
-            var isInputEOSReached: Boolean
-            var isOutputEOSReached: Boolean
+            // Input data가 EOS에 도달했는지를 나타내는 Boolean 값.
+            var isInputEOSReached = false
+            // Output data가 EOS에 도달했는지를 나타내는 Boolean 값.
+            var isOutputEOSReached = false
 
             // TODO - while문의 조건이 이게 맞나?
             while (!Thread.currentThread().isInterrupted) {
@@ -160,12 +162,20 @@ class AudioPlayer(private val context: Context) {
                     return@Thread
                 }
 
-                isInputEOSReached = requestDecodeUntilEOS()
-                isOutputEOSReached = handleDecodeResultUntilEOS()
+                // Input data가 EOS에 도달하지 않았다면 디코딩을 요청한다. (입력 -> 처리 단계)
+                if (!isInputEOSReached) {
+                    isInputEOSReached = requestDecodeUntilEOS()
+                }
+                // OutputData가 EOS에 도달하지 않았다면 디코딩 결과를 처리한다. (처리 -> 출력 단계)
+                if (!isOutputEOSReached) {
+                    isOutputEOSReached = handleDecodeResultUntilEOS()
+                }
 
                 // Input, Output data 모두 EOS에 도달했다면 다음 트랙 재생을 준비한다.
                 if (isInputEOSReached && isOutputEOSReached) {
                     prepareNextTrack()
+                    isInputEOSReached = false
+                    isOutputEOSReached = false
                 }
             }
         }
