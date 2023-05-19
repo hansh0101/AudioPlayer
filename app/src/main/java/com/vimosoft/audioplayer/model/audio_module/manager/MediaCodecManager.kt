@@ -124,7 +124,6 @@ class MediaCodecManager {
     }
 }
 
-// TODO - OutputBufferInfo와 공통이 있는 것 같다.
 /**
  * 입력 버퍼에 대한 정보를 담는 객체.
  */
@@ -133,7 +132,6 @@ data class InputBufferInfo(
     val buffer: ByteBuffer?
 )
 
-// TODO - InputBufferInfo와 공통이 있는 것 같다.
 /**
  * 출력 버퍼에 대한 정보를 담는 객체.
  */
