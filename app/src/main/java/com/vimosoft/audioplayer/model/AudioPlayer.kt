@@ -79,7 +79,7 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 위한 리소스를 준비한다.
      */
     fun prepare(fileName: String = "") {
-        // fileName을 설정한다.
+        // 재생할 오디오 파일의 이름을 설정한다.
         if (fileName != "") {
             this.fileName = fileName
         }
