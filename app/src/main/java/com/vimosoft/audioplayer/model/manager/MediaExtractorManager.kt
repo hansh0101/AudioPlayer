@@ -32,7 +32,7 @@ class MediaExtractorManager {
         }
         assetFileDescriptor.close()
 
-        val trackIndex = findTrackIndex(prefix)
+        val trackIndex = getTrackIndexByType(prefix)
         if (trackIndex == -1) {
             throw IllegalStateException("There is no $prefix MIME type track.")
         }
@@ -79,7 +79,7 @@ class MediaExtractorManager {
     /**
      * 주어진 prefix에 해당하는 MIME 타입의 트랙 인덱스를 반환한다.
      */
-    private fun findTrackIndex(prefix: String): Int {
+    private fun getTrackIndexByType(prefix: String): Int {
         var trackIndex = -1
         for (i in 0 until mediaExtractor.trackCount) {
             val mediaFormat: MediaFormat = mediaExtractor.getTrackFormat(i)
