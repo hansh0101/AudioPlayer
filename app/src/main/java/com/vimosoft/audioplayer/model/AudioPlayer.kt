@@ -97,6 +97,17 @@ class AudioPlayer(private val context: Context) {
     }
 
     /**
+     * 오디오 재생을 마친 후 리소스를 정리한다.
+     */
+    fun release() {
+        mediaExtractorManager.release()
+        mediaCodecManager.release()
+        audioTrackManager.release()
+        audioThread?.interrupt()
+        audioThread = null
+    }
+
+    /**
      * 오디오 재생을 시작한다.
      */
     fun play() {
@@ -126,17 +137,6 @@ class AudioPlayer(private val context: Context) {
         audioTrackManager.flush()
         mediaCodecManager.flush()
         mediaExtractorManager.seekTo(playbackPosition)
-    }
-
-    /**
-     * 오디오 재생을 마친 후 리소스를 정리한다.
-     */
-    fun release() {
-        mediaExtractorManager.release()
-        mediaCodecManager.release()
-        audioTrackManager.release()
-        audioThread?.interrupt()
-        audioThread = null
     }
 
     // ---------------------------------------------------------------------------------------------
