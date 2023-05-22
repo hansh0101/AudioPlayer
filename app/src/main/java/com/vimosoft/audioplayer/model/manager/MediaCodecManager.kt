@@ -1,6 +1,7 @@
 package com.vimosoft.audioplayer.model.manager
 
 import android.media.MediaCodec
+import android.media.MediaCodecList
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
@@ -33,15 +34,11 @@ class MediaCodecManager {
      * MediaCodec 객체를 구성하고 시작 가능한 상태로 만든다.
      */
     fun configureDecoder(mediaFormat: MediaFormat) {
-        val mimeType: String? = mediaFormat.getString(MediaFormat.KEY_MIME)
+        val codecName = MediaCodecList(MediaCodecList.ALL_CODECS).findDecoderForFormat(mediaFormat)
 
-        if (mimeType == null) {
-            throw IllegalArgumentException("MIME type is null.")
-        } else {
-            mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
-                configure(mediaFormat, null, null, 0)
-                start()
-            }
+        mediaCodec = MediaCodec.createByCodecName(codecName).apply {
+            configure(mediaFormat, null, null, 0)
+            start()
         }
     }
 
