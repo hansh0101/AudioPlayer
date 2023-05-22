@@ -9,7 +9,7 @@ import java.nio.ByteBuffer
 /**
  * 소리를 출력하기 위해 AudioTrack을 통해 PCM 데이터를 재생하는 작업을 전반적으로 담당하는 객체.
  */
-class AudioTrackManager {
+class AudioOutputUnit {
     // ---------------------------------------------------------------------------------------------
     // AudioTrackManager 사용에 필요한 private variables.
 

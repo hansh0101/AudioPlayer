@@ -2,9 +2,9 @@ package com.vimosoft.audioplayer.model
 
 import android.content.Context
 import android.media.MediaFormat
-import com.vimosoft.audioplayer.model.manager.AudioTrackManager
-import com.vimosoft.audioplayer.model.manager.MediaCodecManager
-import com.vimosoft.audioplayer.model.manager.MediaExtractorManager
+import com.vimosoft.audioplayer.model.manager.AudioDecodeProcessor
+import com.vimosoft.audioplayer.model.manager.AudioInputUnit
+import com.vimosoft.audioplayer.model.manager.AudioOutputUnit
 import timber.log.Timber
 
 /**
@@ -41,17 +41,17 @@ class AudioPlayer(private val context: Context) {
     /**
      * MediaExtractor 초기화, 해제, 미디어 파일 추출, 재생 위치 조정 등의 작업을 담당하는 MediaExtractorManager 객체.
      */
-    private val mediaExtractorManager: MediaExtractorManager = MediaExtractorManager()
+    private val audioInputUnit: AudioInputUnit = AudioInputUnit()
 
     /**
      * MediaCodec 초기화, 해제, 입출력 버퍼 제공 및 회수, 인코딩/디코딩 등의 작업을 담당하는 MediaCodecManager 객체.
      */
-    private val mediaCodecManager: MediaCodecManager = MediaCodecManager()
+    private val audioDecodeProcessor: AudioDecodeProcessor = AudioDecodeProcessor()
 
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-    private val audioTrackManager: AudioTrackManager = AudioTrackManager()
+    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
 
     /**
      * 오디오를 재생하는 스레드를
@@ -86,23 +86,23 @@ class AudioPlayer(private val context: Context) {
 
         // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
         mediaFormat =
-            mediaExtractorManager.configure(context.assets.openFd(this.fileName), "audio/")
+            audioInputUnit.configure(context.assets.openFd(this.fileName), "audio/")
         duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
-        mediaCodecManager.configureDecoder(mediaFormat)
+        audioDecodeProcessor.configure(mediaFormat)
 
         // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
-        audioTrackManager.configure(mediaFormat)
+        audioOutputUnit.configure(mediaFormat)
     }
 
     /**
      * 오디오 재생을 마친 후 리소스를 정리한다.
      */
     fun release() {
-        mediaExtractorManager.release()
-        mediaCodecManager.release()
-        audioTrackManager.release()
+        audioInputUnit.release()
+        audioDecodeProcessor.release()
+        audioOutputUnit.release()
         audioThread?.interrupt()
         audioThread = null
     }
@@ -136,9 +136,9 @@ class AudioPlayer(private val context: Context) {
      * 재생 위치를 조정한다.
      */
     fun seek(playbackPosition: Long) {
-        audioTrackManager.flush()
-        mediaCodecManager.flush()
-        mediaExtractorManager.seekTo(playbackPosition)
+        audioOutputUnit.flush()
+        audioDecodeProcessor.flush()
+        audioInputUnit.seekTo(playbackPosition)
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -197,10 +197,10 @@ class AudioPlayer(private val context: Context) {
      * MediaCodecManager에 오디오 파일 디코딩을 요청한다.
      */
     private fun requestDecodeUntilEOS(): Boolean {
-        val inputBufferInfo = mediaCodecManager.assignInputBuffer()
+        val inputBufferInfo = audioDecodeProcessor.assignInputBuffer()
         if (inputBufferInfo.buffer != null) {
-            val extractionResult = mediaExtractorManager.extract(inputBufferInfo.buffer)
-            mediaCodecManager.submitInputBuffer(
+            val extractionResult = audioInputUnit.extract(inputBufferInfo.buffer)
+            audioDecodeProcessor.submitInputBuffer(
                 inputBufferInfo.bufferIndex,
                 0,
                 extractionResult.sampleSize,
@@ -218,10 +218,10 @@ class AudioPlayer(private val context: Context) {
      * MediaCodecManager가 수행한 디코딩 결과를 처리한다.
      */
     private fun handleDecodeResultUntilEOS(): Boolean {
-        val outputBufferInfo = mediaCodecManager.getOutputBuffer()
+        val outputBufferInfo = audioDecodeProcessor.getOutputBuffer()
         if (outputBufferInfo.buffer != null) {
-            audioTrackManager.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
-            mediaCodecManager.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
+            audioOutputUnit.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
+            audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
 
             playbackPosition = outputBufferInfo.info.presentationTimeUs
             return outputBufferInfo.isEOS
@@ -233,9 +233,9 @@ class AudioPlayer(private val context: Context) {
      * 다음 트랙 재생을 준비한다.
      */
     private fun prepareNextTrack() {
-        mediaExtractorManager.release()
-        mediaCodecManager.release()
-        audioTrackManager.release()
+        audioInputUnit.release()
+        audioDecodeProcessor.release()
+        audioOutputUnit.release()
         prepare()
         isPlaying = false
         playbackPosition = 0

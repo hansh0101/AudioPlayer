@@ -8,7 +8,7 @@ import java.nio.ByteBuffer
 /**
  * 미디어 파일을 재생하기 위해 MediaExtractor를 통해 압축된 미디어 파일을 읽어오는 작업을 전반적으로 담당하는 객체.
  */
-class MediaExtractorManager {
+class AudioInputUnit {
     // ---------------------------------------------------------------------------------------------
     // MediaExtractorManager 사용에 필요한 private variables.
 

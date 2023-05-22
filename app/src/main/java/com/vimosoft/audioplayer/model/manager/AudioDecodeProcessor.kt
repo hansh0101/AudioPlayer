@@ -8,7 +8,7 @@ import java.nio.ByteBuffer
 /**
  * MediaCodec을 통해 미디어 파일을 인코딩/디코딩하는 작업을 전반적으로 담당하는 객체.
  */
-class MediaCodecManager {
+class AudioDecodeProcessor {
     // ---------------------------------------------------------------------------------------------
     // MediaCodecManager 사용에 필요한 private variables.
 
@@ -33,7 +33,7 @@ class MediaCodecManager {
     /**
      * MediaCodec 객체를 구성하고 시작 가능한 상태로 만든다.
      */
-    fun configureDecoder(mediaFormat: MediaFormat) {
+    fun configure(mediaFormat: MediaFormat) {
         val codecName = MediaCodecList(MediaCodecList.ALL_CODECS).findDecoderForFormat(mediaFormat)
 
         mediaCodec = MediaCodec.createByCodecName(codecName).apply {
