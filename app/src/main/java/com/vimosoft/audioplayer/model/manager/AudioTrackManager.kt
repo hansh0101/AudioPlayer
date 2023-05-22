@@ -48,9 +48,7 @@ class AudioTrackManager {
             .setBufferSizeInBytes(bufferSizeInBytes)
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
-            .apply {
-                play()
-            }
+            .apply { play() }
     }
 
     /**
