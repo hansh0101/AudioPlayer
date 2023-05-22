@@ -115,9 +115,11 @@ class AudioPlayer(private val context: Context) {
             configureAudioThread()
         }
 
-        synchronized(lock) {
-            isPlaying = true
-            lock.notify()
+        if (!isPlaying) {
+            synchronized(lock) {
+                isPlaying = true
+                lock.notify()
+            }
         }
     }
 
@@ -125,7 +127,7 @@ class AudioPlayer(private val context: Context) {
      * 오디오 재생을 중지한다.
      */
     fun pause() {
-        synchronized(lock) {
+        if (isPlaying) {
             isPlaying = false
         }
     }
