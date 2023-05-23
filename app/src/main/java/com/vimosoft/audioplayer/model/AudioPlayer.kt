@@ -2,9 +2,6 @@ package com.vimosoft.audioplayer.model
 
 import android.content.Context
 import android.media.MediaFormat
-import com.vimosoft.audioplayer.model.manager.AudioDecodeProcessor
-import com.vimosoft.audioplayer.model.manager.AudioInputUnit
-import com.vimosoft.audioplayer.model.manager.AudioOutputUnit
 import timber.log.Timber
 
 /**

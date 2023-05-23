@@ -1,4 +1,4 @@
-package com.vimosoft.audioplayer.model.manager
+package com.vimosoft.audioplayer.model
 
 import android.media.AudioAttributes
 import android.media.AudioFormat
