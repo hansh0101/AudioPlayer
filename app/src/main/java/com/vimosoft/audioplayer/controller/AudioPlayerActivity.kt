@@ -48,6 +48,9 @@ class AudioPlayerActivity : AppCompatActivity() {
         binding = ActivityAudioPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // this is test function for using jni.
+        jniTest()
+
         configureAudioPlayer()
         initEventListener()
     }
@@ -111,7 +114,18 @@ class AudioPlayerActivity : AppCompatActivity() {
         binding.textPlayerState.text = getString(R.string.state_pause)
     }
 
+    private fun jniTest() {
+        binding.textPlayerState.text = stringFromJNI()
+    }
+
+    // JNI test
+    private external fun stringFromJNI(): String
+
     companion object {
         const val FILE_NAME = "music.mp3"
+
+        init {
+            System.loadLibrary("SoundGenerator")
+        }
     }
 }
