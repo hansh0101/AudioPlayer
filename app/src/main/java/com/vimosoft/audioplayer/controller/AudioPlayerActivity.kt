@@ -43,7 +43,7 @@ class AudioPlayerActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------------------------------------
     // jni test
-    private var playerHandle: Long = 0L
+    private var player: Long = 0L
 
     // ---------------------------------------------------------------------------------------------
     // 생명주기 콜백 메서드
@@ -78,11 +78,16 @@ class AudioPlayerActivity : AppCompatActivity() {
         binding.run {
             buttonPlay.setOnClickListener {
 //                playMusic()
-                playerHandle = startAudio()
+                if (player == 0L) {
+                    player = startAudio()
+                }
             }
             buttonPause.setOnClickListener {
 //                pauseMusic()
-                stopAudio(playerHandle)
+                if (player != 0L) {
+                    stopAudio(player)
+                    player = 0L
+                }
             }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L
