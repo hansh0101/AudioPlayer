@@ -42,6 +42,10 @@ class AudioPlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAudioPlayerBinding
 
     // ---------------------------------------------------------------------------------------------
+    // jni test
+    private var playerHandle: Long = 0L
+
+    // ---------------------------------------------------------------------------------------------
     // 생명주기 콜백 메서드
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,8 +76,14 @@ class AudioPlayerActivity : AppCompatActivity() {
     // 이벤트 리스너 등록.
     private fun initEventListener() {
         binding.run {
-            buttonPlay.setOnClickListener { playMusic() }
-            buttonPause.setOnClickListener { pauseMusic() }
+            buttonPlay.setOnClickListener {
+//                playMusic()
+                playerHandle = startAudio()
+            }
+            buttonPause.setOnClickListener {
+//                pauseMusic()
+                stopAudio(playerHandle)
+            }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L
                 var isPlayed: Boolean = false
@@ -120,6 +130,8 @@ class AudioPlayerActivity : AppCompatActivity() {
 
     // JNI test
     private external fun stringFromJNI(): String
+    private external fun startAudio(): Long
+    private external fun stopAudio(playerHandle: Long)
 
     companion object {
         const val FILE_NAME = "music.mp3"
