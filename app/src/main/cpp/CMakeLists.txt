@@ -24,6 +24,7 @@ add_library(
 
         # Provides a relative path to your source file(s).
         jni_bridge.cpp
+        AudioOutputUnit.cpp
 )
 
 # Find the Oboe package

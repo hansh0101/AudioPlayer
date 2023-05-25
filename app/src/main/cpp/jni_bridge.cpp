@@ -1,10 +1,59 @@
 #include <jni.h>
 #include <string>
 #include <oboe/Oboe.h>
+#include "AudioOutputUnit.h"
+#include <cstdint>
 #include <cmath>
+#include <android/log.h>
+
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,"C++",__VA_ARGS__)
+#define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,"C++",__VA_ARGS__)
+#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,"C++",__VA_ARGS__)
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,"C++",__VA_ARGS__)
 
 using namespace std;
 using namespace oboe;
+
+// -------------------------------------------------------------------------------------------------
+// 실제 코드
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_initialize(JNIEnv *env, jobject thiz) {
+    AudioOutputUnit *outputUnit = new AudioOutputUnit();
+    return reinterpret_cast<jlong>(outputUnit);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_releaseOutputUnit(JNIEnv *env, jobject thiz,
+                                                                          jlong output_unit) {
+    AudioOutputUnit *outputUnit = reinterpret_cast<AudioOutputUnit *>(output_unit);
+    delete outputUnit;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_requestPlayback(JNIEnv *env, jobject thiz,
+                                                                        jlong output_unit,
+                                                                        jobject buffer,
+                                                                        jint number_of_frames) {
+    AudioOutputUnit *outputUnit = reinterpret_cast<AudioOutputUnit *>(output_unit);
+    void *audioData = env->GetDirectBufferAddress(buffer);
+    int32_t numFrames = static_cast<int32_t>(number_of_frames);
+    outputUnit->requestPlayback(audioData, numFrames);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_flushBuffer(JNIEnv *env, jobject thiz,
+                                                                    jlong output_unit) {
+    AudioOutputUnit *outputUnit = reinterpret_cast<AudioOutputUnit *>(output_unit);
+    outputUnit->flush();
+}
+
+// -------------------------------------------------------------------------------------------------
+// 테스트용 코드
 
 class OboeSinePlayer : public AudioStreamDataCallback {
 public:
@@ -47,6 +96,9 @@ public:
 
     DataCallbackResult
     onAudioReady(AudioStream *oboeStream, void *audioData, int32_t numFrames) override {
+
+        LOGI("onAudioReady called, numFrames value is %d", numFrames);
+
         float *floatData = (float *) audioData;
         for (int i = 0; i < numFrames; ++i) {
             float sampleValue = kAmplitude * sinf(mPhase);
@@ -67,8 +119,8 @@ private:
     shared_ptr<AudioStream> mStream;
 
     // Stream params
-    static int constexpr kChannelCount = 2;
-    static int constexpr kSampleRate = 48000;
+    static int constexpr kChannelCount = ChannelCount::Stereo;
+    static int constexpr kSampleRate = 44100;
 
     // Wave params
     static float constexpr kAmplitude = 0.5f;

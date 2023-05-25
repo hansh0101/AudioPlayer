@@ -77,17 +77,17 @@ class AudioPlayerActivity : AppCompatActivity() {
     private fun initEventListener() {
         binding.run {
             buttonPlay.setOnClickListener {
-//                playMusic()
-                if (player == 0L) {
-                    player = startAudio()
-                }
+                playMusic()
+//                if (player == 0L) {
+//                    player = startAudio()
+//                }
             }
             buttonPause.setOnClickListener {
-//                pauseMusic()
-                if (player != 0L) {
-                    stopAudio(player)
-                    player = 0L
-                }
+                pauseMusic()
+//                if (player != 0L) {
+//                    stopAudio(player)
+//                    player = 0L
+//                }
             }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L
