@@ -22,9 +22,11 @@ add_library(
         # Sets the library as a shared library.
         SHARED
 
-        # Provides a relative path to your source file(s).
-        jni_bridge.cpp
-        AudioOutputUnit.cpp
+        # Dev codes
+
+        # Prod codes
+        audio_jni_bridge.cpp
+        AudioSinkUnit.cpp
 )
 
 # Find the Oboe package

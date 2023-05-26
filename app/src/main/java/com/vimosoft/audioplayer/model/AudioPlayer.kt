@@ -48,8 +48,8 @@ class AudioPlayer(private val context: Context) {
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
-//    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
+//    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
+    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
 
     /**
      * 오디오를 재생하는 스레드를
@@ -128,6 +128,9 @@ class AudioPlayer(private val context: Context) {
         if (isPlaying) {
             isPlaying = false
         }
+
+        // TODO - 나중에 수정하긴 해야합니다.
+        audioOutputUnit.flush()
     }
 
     /**
@@ -171,11 +174,12 @@ class AudioPlayer(private val context: Context) {
                 }
 
                 // Input, Output data 모두 EOS에 도달했다면 다음 트랙 재생을 준비한다.
-                if (isInputEOSReached && isOutputEOSReached) {
-                    prepareNextTrack()
-                    isInputEOSReached = false
-                    isOutputEOSReached = false
-                }
+//                if (isInputEOSReached && isOutputEOSReached) {
+//                    TODO : 삐 소리를 계속 듣기 위해 ... 주석 처리하였다.
+//                    prepareNextTrack()
+//                    isInputEOSReached = false
+//                    isOutputEOSReached = false
+//                }
             }
         }.apply { start() }
     }
@@ -230,12 +234,12 @@ class AudioPlayer(private val context: Context) {
     /**
      * 다음 트랙 재생을 준비한다.
      */
-    private fun prepareNextTrack() {
-        audioInputUnit.release()
-        audioDecodeProcessor.release()
-        audioOutputUnit.release()
-        prepare()
-        isPlaying = false
-        playbackPosition = 0
-    }
+//    private fun prepareNextTrack() {
+//        audioInputUnit.release()
+//        audioDecodeProcessor.release()
+//        audioOutputUnit.release()
+//        prepare()
+//        isPlaying = false
+//        playbackPosition = 0
+//    }
 }

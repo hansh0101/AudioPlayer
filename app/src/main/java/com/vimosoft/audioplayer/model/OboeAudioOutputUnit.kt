@@ -4,76 +4,44 @@ import android.media.MediaFormat
 import java.nio.ByteBuffer
 
 class OboeAudioOutputUnit {
-    private var audioOutputUnit = 0L
+    private var audioSink: Long = 0L
 
     fun configure(mediaFormat: MediaFormat) {
-        if (audioOutputUnit == 0L) {
-            audioOutputUnit = initialize()
+        val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+        val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+
+        if (audioSink == 0L) {
+            audioSink = initialize(channelCount, sampleRate)
         }
     }
 
     fun release() {
-        if (audioOutputUnit != 0L) {
-            releaseOutputUnit()
-            audioOutputUnit = 0L
+        if (audioSink != 0L) {
+            release(audioSink)
         }
     }
 
     fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
-        if (audioOutputUnit != 0L) {
-            val thread = Thread {
-                val numFrames = getNumberOfFrames(outputBuffer, 2, size)
-                requestPlayback(buffer = outputBuffer, numberOfFrames = numFrames)
-            }
-            thread.start()
-            thread.join()
+        if (audioSink != 0L) {
+            requestPlayback(audioSink)
         }
     }
 
     fun flush() {
-        if (audioOutputUnit != 0L) {
-            flushBuffer()
+        if (audioSink != 0L) {
+            requestStop(audioSink)
+            audioSink = 0L
         }
     }
 
-    private fun getNumberOfFrames(
-        buffer: ByteBuffer,
-        channelCount: Int,
-        sampleSize: Int
-    ): Int {
-        val capacity = buffer.capacity()
-        val bytesPerFrame = channelCount * sampleSize
-        return capacity / bytesPerFrame
-    }
-
-    // JNI func
-    /**
-     * 초기화
-     */
-    private external fun initialize(): Long
-
-    /**
-     * 소멸
-     */
-    private external fun releaseOutputUnit(outputUnit: Long = audioOutputUnit)
-
-    /**
-     * 재생
-     */
-    private external fun requestPlayback(
-        outputUnit: Long = audioOutputUnit,
-        buffer: ByteBuffer,
-        numberOfFrames: Int
-    )
-
-    /**
-     * flush
-     */
-    private external fun flushBuffer(outputUnit: Long = audioOutputUnit)
+    private external fun initialize(channelCount: Int, sampleRate: Int): Long
+    private external fun release(audioSink: Long)
+    private external fun requestPlayback(audioSink: Long)
+    private external fun requestStop(audioSink: Long)
 
     companion object {
         init {
-            System.loadLibrary("SoundGenerator");
+            System.loadLibrary("SoundGenerator")
         }
     }
 }

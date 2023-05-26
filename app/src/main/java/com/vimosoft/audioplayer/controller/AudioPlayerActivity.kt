@@ -42,18 +42,11 @@ class AudioPlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAudioPlayerBinding
 
     // ---------------------------------------------------------------------------------------------
-    // jni test
-    private var player: Long = 0L
-
-    // ---------------------------------------------------------------------------------------------
     // 생명주기 콜백 메서드
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAudioPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // this is test function for using jni.
-        jniTest()
 
         configureAudioPlayer()
         initEventListener()
@@ -78,16 +71,9 @@ class AudioPlayerActivity : AppCompatActivity() {
         binding.run {
             buttonPlay.setOnClickListener {
                 playMusic()
-//                if (player == 0L) {
-//                    player = startAudio()
-//                }
             }
             buttonPause.setOnClickListener {
                 pauseMusic()
-//                if (player != 0L) {
-//                    stopAudio(player)
-//                    player = 0L
-//                }
             }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L
@@ -129,20 +115,7 @@ class AudioPlayerActivity : AppCompatActivity() {
         binding.textPlayerState.text = getString(R.string.state_pause)
     }
 
-    private fun jniTest() {
-        binding.textPlayerState.text = stringFromJNI()
-    }
-
-    // JNI test
-    private external fun stringFromJNI(): String
-    private external fun startAudio(): Long
-    private external fun stopAudio(playerHandle: Long)
-
     companion object {
         const val FILE_NAME = "music.mp3"
-
-        init {
-            System.loadLibrary("SoundGenerator")
-        }
     }
 }
