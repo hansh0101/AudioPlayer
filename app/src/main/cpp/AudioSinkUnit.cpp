@@ -29,23 +29,20 @@ AudioSinkUnit::~AudioSinkUnit() {
 }
 
 oboe::Result AudioSinkUnit::startAudio() {
+//    this_thread::sleep_for(chrono::microseconds(1000));
+
     lock_guard<mutex> lock(mLock);
 
     oboe::Result result = oboe::Result::OK;
 
-    LOGI("mStream's state : %s", oboe::convertToText(mStream->getState()));
-
     if (mStream->getState() != oboe::StreamState::Starting &&
         mStream->getState() != oboe::StreamState::Started) {
-        LOGI("startAudio() called");
         result = mStream->requestStart();
     }
     return result;
 }
 
 void AudioSinkUnit::stopAudio() {
-    LOGI("stopAudio() called");
-
     lock_guard<mutex> lock(mLock);
 
     if (mStream) {
@@ -57,13 +54,10 @@ void AudioSinkUnit::stopAudio() {
 
 oboe::DataCallbackResult
 AudioSinkUnit::onAudioReady(oboe::AudioStream *oboeStream, void *audioData, int32_t numFrames) {
-    LOGI("onAudioReady() called");
-
     auto *data = static_cast<int16_t *>(audioData);
 
     for (int frame = 0; frame < numFrames; frame++) {
         auto sampleValue = static_cast<int16_t>(mAmplitude * sinf(mPhase));
-        LOGI("sampleValue : %d", sampleValue);
 
         for (int channel = 0; channel < mChannelCount; channel++) {
             data[frame * mChannelCount + channel] = sampleValue;
@@ -76,4 +70,14 @@ AudioSinkUnit::onAudioReady(oboe::AudioStream *oboeStream, void *audioData, int3
     }
 
     return oboe::DataCallbackResult::Continue;
+}
+
+string AudioSinkUnit::getThreadId() {
+    thread::id threadId = this_thread::get_id();
+
+    ostringstream oss;
+    oss << threadId;
+    string threadIdString = oss.str();
+
+    return threadIdString;
 }

@@ -4,6 +4,9 @@
 #include <oboe/Oboe.h>
 #include <android/log.h>
 
+#include <thread>
+#include <string>
+
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"AudioSinkUnit",__VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AudioSinkUnit",__VA_ARGS__)
 
@@ -37,6 +40,8 @@ private:
     float mTwoPi = mPi * 2;
     double mPhaseIncrement = mFrequency * mTwoPi / (double) (mSampleRate);
     float mPhase = 0.0f;
+
+    string getThreadId();
 };
 
 #endif
