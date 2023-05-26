@@ -65,13 +65,8 @@ class AudioOutputUnit {
      * AudioTrack 객체를 사용해 버퍼의 데이터를 소리로 출력한다.
      */
     fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
-        val chunk = ByteArray(size)
-        outputBuffer.get(chunk)
+        audioTrack.write(outputBuffer, size, AudioTrack.WRITE_BLOCKING)
         outputBuffer.clear()
-
-        if (chunk.isNotEmpty()) {
-            audioTrack.write(chunk, 0, chunk.size)
-        }
     }
 
     /**
