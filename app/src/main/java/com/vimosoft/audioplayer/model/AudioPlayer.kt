@@ -48,8 +48,8 @@ class AudioPlayer(private val context: Context) {
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
-//    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
+//    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
+    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
 
     /**
      * 오디오를 재생하는 스레드를
@@ -229,7 +229,6 @@ class AudioPlayer(private val context: Context) {
             audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
 
             playbackPosition = outputBufferInfo.info.presentationTimeUs
-//            Timber.tag("playback position").i("$playbackPosition")
             return outputBufferInfo.isEOS
         }
         return false
