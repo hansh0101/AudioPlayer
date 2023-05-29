@@ -4,7 +4,6 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.MediaFormat
-import timber.log.Timber
 import java.nio.ByteBuffer
 
 /**
@@ -66,7 +65,6 @@ class AudioOutputUnit {
      * AudioTrack 객체를 사용해 버퍼의 데이터를 소리로 출력한다.
      */
     fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
-        Timber.tag("size").i("$size")
         audioTrack.write(outputBuffer, size, AudioTrack.WRITE_BLOCKING)
         outputBuffer.clear()
     }

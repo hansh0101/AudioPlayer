@@ -15,9 +15,7 @@ class AudioPlayer(private val context: Context) {
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
-    @Volatile
-    var isPlaying: Boolean = false
-        private set
+    val isPlaying: Boolean get() = audioThread?.isAlive == true
 
     /**
      * 오디오 파일의 길이(단위 - microsecond) 값.
@@ -48,13 +46,12 @@ class AudioPlayer(private val context: Context) {
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-//    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
-    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
+    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
+//    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
 
     /**
-     * 오디오를 재생하는 스레드를
+     * 오디오를 재생하는 스레드 객체.
      */
-    private val lock = Object()
     private var audioThread: Thread? = null
 
     // ---------------------------------------------------------------------------------------------
@@ -112,25 +109,14 @@ class AudioPlayer(private val context: Context) {
         if (audioThread == null || audioThread?.isInterrupted == true) {
             configureAudioThread()
         }
-
-        if (!isPlaying) {
-            synchronized(lock) {
-                isPlaying = true
-                lock.notify()
-            }
-        }
     }
 
     /**
      * 오디오 재생을 중지한다.
      */
     fun pause() {
-        if (isPlaying) {
-            isPlaying = false
-        }
-
-        // TODO - 나중에 수정하긴 해야합니다.
-        audioOutputUnit.flush()
+        audioThread?.interrupt()
+        audioThread = null
     }
 
     /**
@@ -159,14 +145,6 @@ class AudioPlayer(private val context: Context) {
             var isOutputEOSReached = false
 
             while (!Thread.currentThread().isInterrupted) {
-                // 일시정지 상태라면 재생 상태가 될 때까지 Thread의 State를 WAITING으로 만든다.
-                try {
-                    waitForPlayback()
-                } catch (exception: InterruptedException) {
-                    Timber.e(exception)
-                    return@Thread
-                }
-
                 // Input data가 EOS에 도달하지 않았다면 디코딩을 요청한다. (입력 -> 처리 단계)
                 if (!isInputEOSReached) {
                     isInputEOSReached = requestDecodeUntilEOS()
@@ -185,17 +163,6 @@ class AudioPlayer(private val context: Context) {
                 }
             }
         }.apply { start() }
-    }
-
-    /**
-     * 일시정지 시 오디오를 재생하는 스레드를 WAITING 상태로 만든다.
-     */
-    private fun waitForPlayback() {
-        synchronized(lock) {
-            if (!isPlaying) {
-                lock.wait()
-            }
-        }
     }
 
     /**
@@ -242,7 +209,6 @@ class AudioPlayer(private val context: Context) {
         audioDecodeProcessor.release()
         audioOutputUnit.release()
         prepare()
-        isPlaying = false
         playbackPosition = 0
     }
 }

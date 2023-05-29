@@ -18,6 +18,7 @@ class OboeAudioOutputUnit {
     fun release() {
         if (audioSink != 0L) {
             release(audioSink)
+            audioSink = 0L
         }
     }
 
