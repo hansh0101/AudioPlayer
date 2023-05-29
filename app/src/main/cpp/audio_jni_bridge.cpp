@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_initialize(JNIEnv *env, jobject thiz,
                                                                    jint channel_count,
@@ -19,11 +18,14 @@ Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_release(JNIEnv *env, job
     delete audioSink;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C"
+JNIEXPORT void JNICALL
 Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_requestPlayback(JNIEnv *env, jobject thiz,
-                                                                        jlong audio_sink) {
+                                                                        jlong audio_sink,
+                                                                        jobject output_buffer) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
-    audioSink->startAudio();
+    void *bufferPtr = env->GetDirectBufferAddress(output_buffer);
+    audioSink->startAudio(bufferPtr);
 }
 
 extern "C" JNIEXPORT void JNICALL

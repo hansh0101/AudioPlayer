@@ -4,26 +4,20 @@
 #include <oboe/Oboe.h>
 #include <android/log.h>
 
-#include <thread>
-#include <string>
-
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"AudioSinkUnit",__VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AudioSinkUnit",__VA_ARGS__)
 
 using namespace std;
 
-class AudioSinkUnit : public oboe::AudioStreamDataCallback {
+class AudioSinkUnit {
 public:
     AudioSinkUnit(int channelCount, int sampleRate);
 
     ~AudioSinkUnit();
 
-    oboe::Result startAudio();
+    void startAudio(const void *buffer);
 
     void stopAudio();
-
-    oboe::DataCallbackResult
-    onAudioReady(oboe::AudioStream *oboeStream, void *audioData, int32_t numFrames);
 
 private:
     // member variables
@@ -40,8 +34,6 @@ private:
     float mTwoPi = mPi * 2;
     double mPhaseIncrement = mFrequency * mTwoPi / (double) (mSampleRate);
     float mPhase = 0.0f;
-
-    string getThreadId();
 };
 
 #endif
