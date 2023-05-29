@@ -46,8 +46,8 @@ class AudioPlayer(private val context: Context) {
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
-//    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
+//    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
+    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
 
     /**
      * 오디오를 재생하는 스레드 객체.
@@ -123,7 +123,6 @@ class AudioPlayer(private val context: Context) {
      * 재생 위치를 조정한다.
      */
     fun seek(playbackPosition: Long) {
-        audioOutputUnit.flush()
         audioDecodeProcessor.flush()
         audioInputUnit.seekTo(playbackPosition)
     }

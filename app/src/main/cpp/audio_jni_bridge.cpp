@@ -27,10 +27,3 @@ Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_requestPlayback(JNIEnv *
     void *bufferPtr = env->GetDirectBufferAddress(output_buffer);
     audioSink->startAudio(bufferPtr);
 }
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_vimosoft_audioplayer_model_OboeAudioOutputUnit_requestStop(JNIEnv *env, jobject thiz,
-                                                                    jlong audio_sink) {
-    auto *audioSink = (AudioSinkUnit *) audio_sink;
-    audioSink->stopAudio();
-}

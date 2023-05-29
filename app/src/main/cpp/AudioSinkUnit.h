@@ -17,8 +17,6 @@ public:
 
     void startAudio(const void *buffer);
 
-    void stopAudio();
-
 private:
     // member variables
     mutex mLock;

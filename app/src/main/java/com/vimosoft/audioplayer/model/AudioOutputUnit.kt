@@ -69,13 +69,6 @@ class AudioOutputUnit {
         outputBuffer.clear()
     }
 
-    /**
-     * AudioTrack 객체 내부 버퍼를 flush한다.
-     */
-    fun flush() {
-        audioTrack.flush()
-    }
-
     // ---------------------------------------------------------------------------------------------
     // AudioTrackManager 내부적으로 사용하는 private methods.
 

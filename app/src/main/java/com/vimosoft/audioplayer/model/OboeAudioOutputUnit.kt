@@ -28,17 +28,9 @@ class OboeAudioOutputUnit {
         }
     }
 
-    fun flush() {
-        if (audioSink != 0L) {
-            requestStop(audioSink)
-            audioSink = 0L
-        }
-    }
-
     private external fun initialize(channelCount: Int, sampleRate: Int): Long
     private external fun release(audioSink: Long)
     private external fun requestPlayback(audioSink: Long, outputBuffer: ByteBuffer)
-    private external fun requestStop(audioSink: Long)
 
     companion object {
         init {

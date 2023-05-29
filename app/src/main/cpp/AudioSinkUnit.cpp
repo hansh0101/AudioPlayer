@@ -10,7 +10,6 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate)
             ->setSampleRate(mSampleRate) // here
             ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Best)
             ->setFormat(oboe::AudioFormat::I16) // here
-            ->setBufferCapacityInFrames(1048576) // here
             ->openStream(mStream);
 
     LOGI("SharingMode : %s", oboe::convertToText(mStream->getSharingMode()));
@@ -33,21 +32,9 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate)
     }
 }
 
-AudioSinkUnit::~AudioSinkUnit() {
-    stopAudio();
-}
+AudioSinkUnit::~AudioSinkUnit() = default;
 
 void AudioSinkUnit::startAudio(const void *buffer) {
     auto *audioBuffer = (int16_t *) buffer;
     mStream->write(audioBuffer, 1152, 1e9);
-}
-
-void AudioSinkUnit::stopAudio() {
-    lock_guard<mutex> lock(mLock);
-
-    if (mStream) {
-        mStream->stop();
-        mStream->close();
-        mStream.reset();
-    }
 }
