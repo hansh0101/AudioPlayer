@@ -2,4 +2,6 @@
     <string name="app_name">AudioPlayer</string>
     <string name="state_play">재생 중</string>
     <string name="state_pause">일시정지</string>
+    <string name="text_audio_track">AudioTrack</string>
+    <string name="text_oboe">Oboe</string>
 </resources>

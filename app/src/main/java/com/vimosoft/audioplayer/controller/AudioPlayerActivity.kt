@@ -60,8 +60,12 @@ class AudioPlayerActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer 객체 구성
-    private fun configureAudioPlayer() {
-        audioPlayer = AudioPlayer(applicationContext).apply {
+    private fun configureAudioPlayer(
+        inputType: Int = AudioPlayer.MEDIA_EXTRACTOR,
+        decodeType: Int = AudioPlayer.MEDIA_CODEC,
+        outputType: Int = AudioPlayer.AUDIO_TRACK
+    ) {
+        audioPlayer = AudioPlayer(applicationContext, inputType, decodeType, outputType).apply {
             prepare(FILE_NAME)
         }
     }
@@ -74,6 +78,22 @@ class AudioPlayerActivity : AppCompatActivity() {
             }
             buttonPause.setOnClickListener {
                 pauseMusic()
+            }
+            buttonAudioTrack.setOnClickListener {
+                val isPlayed = audioPlayer?.isPlaying ?: false
+                pauseMusic()
+                configureAudioPlayer(outputType = AudioPlayer.AUDIO_TRACK)
+                if (isPlayed) {
+                    playMusic()
+                }
+            }
+            buttonOboe.setOnClickListener {
+                val isPlayed = audioPlayer?.isPlaying ?: false
+                pauseMusic()
+                configureAudioPlayer(outputType = AudioPlayer.OBOE)
+                if (isPlayed) {
+                    playMusic()
+                }
             }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 var desiredPosition: Long = 0L

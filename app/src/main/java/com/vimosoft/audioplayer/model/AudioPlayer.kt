@@ -6,12 +6,7 @@ import android.media.MediaFormat
 /**
  * 오디오 파일을 재생하는 객체.
  */
-class AudioPlayer(
-    private val context: Context,
-    inputType: Int = MEDIA_EXTRACTOR,
-    decodeType: Int = MEDIA_CODEC,
-    outputType: Int = AUDIO_TRACK
-) {
+class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int, outputType: Int) {
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
