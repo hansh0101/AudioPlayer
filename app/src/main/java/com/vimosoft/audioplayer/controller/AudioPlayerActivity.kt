@@ -1,8 +1,6 @@
 package com.vimosoft.audioplayer.controller
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
@@ -19,31 +17,25 @@ class AudioPlayerActivity : AppCompatActivity() {
     // AudioPlayer Callback
     private val onConfigure: (String, String, String, Int) -> Unit =
         { inputUnit, decodeUnit, outputUnit, duration ->
-            binding.textInputUnit.text = resources.getString(R.string.label_input_unit, inputUnit)
-            binding.textDecodeUnit.text =
-                resources.getString(R.string.label_decode_unit, decodeUnit)
-            binding.textOutputUnit.text =
-                resources.getString(R.string.label_output_unit, outputUnit)
-            binding.textDuration.text = resources.getString(R.string.label_duration, duration)
+            runOnUiThread {
+                binding.textInputUnit.text = getString(R.string.label_input_unit, inputUnit)
+                binding.textDecodeUnit.text = getString(R.string.label_decode_unit, decodeUnit)
+                binding.textOutputUnit.text = getString(R.string.label_output_unit, outputUnit)
+                binding.textDuration.text = resources.getString(R.string.label_duration, duration)
+            }
         }
     private val onInputFileReady: (Int) -> Unit = { duration ->
-        binding.seekBar.max = duration
+        runOnUiThread { binding.seekBar.max = duration }
     }
-
-    // ---------------------------------------------------------------------------------------------
-    // UI를 갱신하기 위한 Handler와 Runnable
-    private val uiUpdateHandler = Handler(Looper.getMainLooper())
-    private val uiUpdateRunnable = object : Runnable {
-        override fun run() {
-            // AudioThread의 생사 여부에 따라 UI를 갱신한다.
-            if (audioPlayer?.isPlaying == true) {
-                binding.seekBar.progress = (audioPlayer!!.playbackPosition / 1000 / 1000).toInt()
-                uiUpdateHandler.postDelayed(this, 1000)
-            } else {
-                uiUpdateHandler.removeCallbacks(this)
-                binding.seekBar.progress = (audioPlayer!!.playbackPosition / 1000 / 1000).toInt()
-                binding.textPlayerState.text = getString(R.string.state_pause)
-            }
+    private val onPlay: (Int) -> Unit = { playbackPosition ->
+        runOnUiThread {
+            binding.seekBar.progress = playbackPosition
+            binding.textPlayerState.text = getString(R.string.state_play)
+        }
+    }
+    private val onPause: () -> Unit = {
+        runOnUiThread {
+            binding.textPlayerState.text = getString(R.string.state_pause)
         }
     }
 
@@ -81,7 +73,9 @@ class AudioPlayerActivity : AppCompatActivity() {
             decodeType,
             outputType,
             onConfigure,
-            onInputFileReady
+            onInputFileReady,
+            onPlay,
+            onPause
         ).apply {
             prepare(FILE_NAME)
         }
@@ -141,15 +135,12 @@ class AudioPlayerActivity : AppCompatActivity() {
     // AudioPlayer를 사용해 오디오 파일을 재생하는 메서드
     private fun playMusic() {
         audioPlayer?.play()
-        uiUpdateHandler.postDelayed(uiUpdateRunnable, 200)
-        binding.textPlayerState.text = getString(R.string.state_play)
     }
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer를 사용해 오디오 파일 재생을 일시정지하는 메서드
     private fun pauseMusic() {
         audioPlayer?.pause()
-        binding.textPlayerState.text = getString(R.string.state_pause)
     }
 
     companion object {

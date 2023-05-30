@@ -19,7 +19,9 @@ class AudioPlayer(
     decodeType: Int,
     outputType: Int,
     private val onConfigure: (String, String, String, Int) -> Unit,
-    private val onInputFileReady: (Int) -> Unit
+    private val onInputFileReady: (Int) -> Unit,
+    private val onPlay: (Int) -> Unit,
+    private val onPause: () -> Unit
 ) {
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 관한 상태를 나타내는 public variables.
@@ -29,13 +31,6 @@ class AudioPlayer(
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
     val isPlaying: Boolean get() = audioThread?.isAlive == true
-
-    /**
-     * 현재 재생 중인 위치(단위 - microsecond) 값.
-     */
-    @Volatile
-    var playbackPosition: Long = 0L
-        private set
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
@@ -131,6 +126,7 @@ class AudioPlayer(
     fun pause() {
         audioThread?.interrupt()
         audioThread = null
+        onPause()
     }
 
     /**
@@ -204,7 +200,9 @@ class AudioPlayer(
             audioOutputUnit.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
             audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
 
-            playbackPosition = outputBufferInfo.info.presentationTimeUs
+            if (!Thread.currentThread().isInterrupted) {
+                onPlay((outputBufferInfo.info.presentationTimeUs / 1000 / 1000).toInt())
+            }
             return outputBufferInfo.isEOS
         }
         return false
@@ -218,7 +216,6 @@ class AudioPlayer(
         audioDecodeProcessor.release()
         audioOutputUnit.release()
         prepare()
-        playbackPosition = 0
     }
 
     companion object {
