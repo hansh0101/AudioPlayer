@@ -7,22 +7,23 @@ import android.media.MediaFormat
 import java.nio.ByteBuffer
 
 /**
- * 소리를 출력하기 위해 AudioTrack을 통해 PCM 데이터를 재생하는 작업을 전반적으로 담당하는 객체.
+ * 오디오 파일 재생을 위해 AudioTrack을 통해 출력을 처리하는 객체.
  */
 class AudioTrackOutputUnit : AudioOutputUnit() {
     // ---------------------------------------------------------------------------------------------
-    // AudioTrackManager 사용에 필요한 private variables.
-
+    // AudioTrackOutputUnit 사용에 필요한 private variables.
     /**
      * 소리를 출력하는 AudioTrack 객체.
      */
     private lateinit var audioTrack: AudioTrack
 
+    /**
+     * UI 표시를 위해 객체명을 나타내는 String 변수.
+     */
     override val name: String = "AudioTrack"
 
     // ---------------------------------------------------------------------------------------------
-    // AudioTrackManager가 외부에 제공하는 public methods.
-
+    // AudioTrackOutputUnit이 외부에 제공하는 public methods.
     /**
      * AudioTrack 객체를 구성한다.
      */
@@ -58,7 +59,7 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
     }
 
     /**
-     * AudioTrackManager 사용을 마친 후 리소스를 정리한다.
+     * AudioTrackOutputUnit 객체 사용을 마친 후 리소스를 정리한다.
      */
     override fun release() {
         audioTrack.run {
@@ -68,7 +69,7 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
     }
 
     /**
-     * AudioTrack 객체를 사용해 버퍼의 데이터를 소리로 출력한다.
+     * AudioTrack 객체를 사용해 outputBuffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
      */
     override fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
         audioTrack.write(outputBuffer, size, AudioTrack.WRITE_BLOCKING)
@@ -76,8 +77,7 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // AudioTrackManager 내부적으로 사용하는 private methods.
-
+    // AudioTrackOutputUnit 내부적으로 사용하는 private methods.
     /**
      * 채널 수에 대한 채널 마스크 Int 값을 반환한다.
      */
