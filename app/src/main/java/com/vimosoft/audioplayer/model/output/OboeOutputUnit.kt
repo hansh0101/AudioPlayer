@@ -10,9 +10,18 @@ class OboeOutputUnit : AudioOutputUnit() {
     override fun configure(mediaFormat: MediaFormat) {
         val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
         val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+        var isFloat = false
         val bitDepth = try {
             when (mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
-                AudioFormat.ENCODING_PCM_FLOAT -> 32
+                AudioFormat.ENCODING_PCM_FLOAT -> {
+                    isFloat = true
+                    32
+                }
+
+                AudioFormat.ENCODING_PCM_32BIT -> 32
+                AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24
+                AudioFormat.ENCODING_PCM_16BIT -> 16
+                AudioFormat.ENCODING_PCM_8BIT -> 8
                 else -> 16
             }
         } catch (e: Exception) {
@@ -20,7 +29,7 @@ class OboeOutputUnit : AudioOutputUnit() {
         }
 
         if (audioSink == 0L) {
-            audioSink = initialize(channelCount, sampleRate, bitDepth)
+            audioSink = initialize(channelCount, sampleRate, bitDepth, isFloat)
         }
     }
 
@@ -37,7 +46,13 @@ class OboeOutputUnit : AudioOutputUnit() {
         }
     }
 
-    private external fun initialize(channelCount: Int, sampleRate: Int, bitDepth: Int): Long
+    private external fun initialize(
+        channelCount: Int,
+        sampleRate: Int,
+        bitDepth: Int,
+        isFloat: Boolean
+    ): Long
+
     private external fun release(audioSink: Long)
     private external fun requestPlayback(audioSink: Long, outputBuffer: ByteBuffer)
 

@@ -11,7 +11,7 @@ using namespace std;
 
 class AudioSinkUnit {
 public:
-    AudioSinkUnit(int channelCount, int sampleRate, int bitDepth);
+    AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, bool isFloat);
 
     ~AudioSinkUnit();
 
@@ -25,6 +25,8 @@ private:
     int mChannelCount;
     int mSampleRate;
     oboe::AudioFormat mFormat;
+
+    void setFormat(int bitDepth, bool isFloat);
 };
 
 #endif

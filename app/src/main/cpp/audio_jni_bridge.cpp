@@ -5,16 +5,17 @@ using namespace std;
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_initialize(JNIEnv *env, jobject thiz,
-                                                              jint channel_count,
-                                                              jint sample_rate,
-                                                              jint bit_depth) {
-    auto *audioSink = new AudioSinkUnit(channel_count, sample_rate, bit_depth);
+                                                                     jint channel_count,
+                                                                     jint sample_rate,
+                                                                     jint bit_depth,
+                                                                     jboolean is_float) {
+    auto *audioSink = new AudioSinkUnit(channel_count, sample_rate, bit_depth, is_float);
     return (jlong) audioSink;
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_release(JNIEnv *env, jobject thiz,
-                                                           jlong audio_sink) {
+                                                                  jlong audio_sink) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
     delete audioSink;
 }
@@ -22,8 +23,8 @@ Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_release(JNIEnv *env, j
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_requestPlayback(JNIEnv *env, jobject thiz,
-                                                                   jlong audio_sink,
-                                                                   jobject output_buffer) {
+                                                                          jlong audio_sink,
+                                                                          jobject output_buffer) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
     void *bufferPtr = env->GetDirectBufferAddress(output_buffer);
     audioSink->startAudio(bufferPtr);
