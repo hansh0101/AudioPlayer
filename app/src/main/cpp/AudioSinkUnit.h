@@ -19,7 +19,6 @@ public:
 
 private:
     // member variables
-    mutex mLock;
     shared_ptr<oboe::AudioStream> mStream;
 
     int mChannelCount;
