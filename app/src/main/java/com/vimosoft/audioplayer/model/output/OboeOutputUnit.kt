@@ -7,6 +7,8 @@ import java.nio.ByteBuffer
 class OboeOutputUnit : AudioOutputUnit() {
     private var audioSink: Long = 0L
 
+    override val name: String = "Oboe"
+
     override fun configure(mediaFormat: MediaFormat) {
         val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
         val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)

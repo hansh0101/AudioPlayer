@@ -13,7 +13,14 @@ import com.vimosoft.audioplayer.model.output.OboeOutputUnit
 /**
  * 오디오 파일을 재생하는 객체.
  */
-class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int, outputType: Int) {
+class AudioPlayer(
+    private val context: Context,
+    inputType: Int,
+    decodeType: Int,
+    outputType: Int,
+    private val onConfigure: (String, String, String, Int) -> Unit,
+    private val onInputFileReady: (Int) -> Unit
+) {
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
@@ -22,12 +29,6 @@ class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int,
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
     val isPlaying: Boolean get() = audioThread?.isAlive == true
-
-    /**
-     * 오디오 파일의 길이(단위 - microsecond) 값.
-     */
-    var duration: Long = 0L
-        private set
 
     /**
      * 현재 재생 중인 위치(단위 - microsecond) 값.
@@ -92,13 +93,16 @@ class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int,
         // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
         val inputMediaFormat =
             audioInputUnit.configure(context.assets.openFd(this.fileName), "audio/")
-        duration = inputMediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
         val outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
 
         // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
         audioOutputUnit.configure(outputMediaFormat)
+
+        val duration = (inputMediaFormat.getLong(MediaFormat.KEY_DURATION) / 1000 / 1000).toInt()
+        onConfigure(audioInputUnit.name, audioDecodeProcessor.name, audioOutputUnit.name, duration)
+        onInputFileReady(duration)
     }
 
     /**

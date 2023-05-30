@@ -18,6 +18,8 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
      */
     private lateinit var audioTrack: AudioTrack
 
+    override val name: String = "AudioTrack"
+
     // ---------------------------------------------------------------------------------------------
     // AudioTrackManager가 외부에 제공하는 public methods.
 

@@ -17,6 +17,8 @@ class MediaExtractorInputUnit : AudioInputUnit() {
      */
     private lateinit var mediaExtractor: MediaExtractor
 
+    override val name: String = "MediaExtractor"
+
     // ---------------------------------------------------------------------------------------------
     // MediaExtractorManager가 외부에 제공하는 public methods.
 

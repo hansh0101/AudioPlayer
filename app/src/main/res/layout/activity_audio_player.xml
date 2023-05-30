@@ -5,14 +5,42 @@
     android:layout_height="match_parent">
 
     <TextView
+        android:id="@+id/text_input_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_decode_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_input_unit" />
+
+    <TextView
+        android:id="@+id/text_output_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_decode_unit" />
+
+    <TextView
+        android:id="@+id/text_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_output_unit" />
+
+    <TextView
         android:id="@+id/text_player_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/state_pause"
-        app:layout_constraintBottom_toTopOf="@id/layout_controller"
+        app:layout_constraintBottom_toTopOf="@id/button_audio_track"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/text_duration" />
 
     <Button
         android:id="@+id/button_audio_track"

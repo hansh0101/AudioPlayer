@@ -5,6 +5,8 @@ import android.media.MediaFormat
 import java.nio.ByteBuffer
 
 abstract class AudioInputUnit {
+    abstract val name: String
+
     abstract fun configure(assetFileDescriptor: AssetFileDescriptor, prefix: String): MediaFormat
     abstract fun release()
     abstract fun extract(destinationBuffer: ByteBuffer): ExtractionResult

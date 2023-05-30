@@ -16,17 +16,27 @@ class AudioPlayerActivity : AppCompatActivity() {
     private var audioPlayer: AudioPlayer? = null
 
     // ---------------------------------------------------------------------------------------------
+    // AudioPlayer Callback
+    private val onConfigure: (String, String, String, Int) -> Unit =
+        { inputUnit, decodeUnit, outputUnit, duration ->
+            binding.textInputUnit.text = resources.getString(R.string.label_input_unit, inputUnit)
+            binding.textDecodeUnit.text =
+                resources.getString(R.string.label_decode_unit, decodeUnit)
+            binding.textOutputUnit.text =
+                resources.getString(R.string.label_output_unit, outputUnit)
+            binding.textDuration.text = resources.getString(R.string.label_duration, duration)
+        }
+    private val onInputFileReady: (Int) -> Unit = { duration ->
+        binding.seekBar.max = duration
+    }
+
+    // ---------------------------------------------------------------------------------------------
     // UI를 갱신하기 위한 Handler와 Runnable
     private val uiUpdateHandler = Handler(Looper.getMainLooper())
     private val uiUpdateRunnable = object : Runnable {
         override fun run() {
             // AudioThread의 생사 여부에 따라 UI를 갱신한다.
             if (audioPlayer?.isPlaying == true) {
-                val duration = (audioPlayer!!.duration / 1000 / 1000).toInt()
-                if (binding.seekBar.max != duration) {
-                    binding.seekBar.max = duration
-                }
-
                 binding.seekBar.progress = (audioPlayer!!.playbackPosition / 1000 / 1000).toInt()
                 uiUpdateHandler.postDelayed(this, 1000)
             } else {
@@ -65,7 +75,14 @@ class AudioPlayerActivity : AppCompatActivity() {
         decodeType: Int = AudioPlayer.MEDIA_CODEC,
         outputType: Int = AudioPlayer.AUDIO_TRACK
     ) {
-        audioPlayer = AudioPlayer(applicationContext, inputType, decodeType, outputType).apply {
+        audioPlayer = AudioPlayer(
+            applicationContext,
+            inputType,
+            decodeType,
+            outputType,
+            onConfigure,
+            onInputFileReady
+        ).apply {
             prepare(FILE_NAME)
         }
     }

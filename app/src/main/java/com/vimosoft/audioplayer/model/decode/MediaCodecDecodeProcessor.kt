@@ -21,6 +21,8 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
      */
     private val bufferInfo = MediaCodec.BufferInfo()
 
+    override val name: String = "MediaCodec"
+
     // ---------------------------------------------------------------------------------------------
     // MediaCodecManager가 외부에 제공하는 public methods.
 

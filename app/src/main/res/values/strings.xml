@@ -4,4 +4,8 @@
     <string name="state_pause">일시정지</string>
     <string name="text_audio_track">AudioTrack</string>
     <string name="text_oboe">Oboe</string>
+    <string name="label_input_unit">Input Unit : %s</string>
+    <string name="label_decode_unit">Decode Unit : %s</string>
+    <string name="label_output_unit">Output Unit : %s</string>
+    <string name="label_duration">Duration : %d초</string>
 </resources>
