@@ -1,4 +1,4 @@
-package com.vimosoft.audioplayer.model
+package com.vimosoft.audioplayer.model.decode
 
 import android.media.MediaCodec
 import android.media.MediaFormat

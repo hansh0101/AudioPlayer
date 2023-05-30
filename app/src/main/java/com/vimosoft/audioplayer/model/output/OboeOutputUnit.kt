@@ -1,9 +1,9 @@
-package com.vimosoft.audioplayer.model
+package com.vimosoft.audioplayer.model.output
 
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
-class OboeAudioOutputUnit : AudioOutputUnit() {
+class OboeOutputUnit : AudioOutputUnit() {
     private var audioSink: Long = 0L
 
     override fun configure(mediaFormat: MediaFormat) {

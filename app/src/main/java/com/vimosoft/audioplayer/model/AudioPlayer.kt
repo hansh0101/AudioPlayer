@@ -2,6 +2,13 @@ package com.vimosoft.audioplayer.model
 
 import android.content.Context
 import android.media.MediaFormat
+import com.vimosoft.audioplayer.model.decode.AudioDecodeProcessor
+import com.vimosoft.audioplayer.model.decode.MediaCodecDecodeProcessor
+import com.vimosoft.audioplayer.model.input.AudioInputUnit
+import com.vimosoft.audioplayer.model.input.MediaExtractorInputUnit
+import com.vimosoft.audioplayer.model.output.AudioOutputUnit
+import com.vimosoft.audioplayer.model.output.AudioTrackOutputUnit
+import com.vimosoft.audioplayer.model.output.OboeOutputUnit
 
 /**
  * 오디오 파일을 재생하는 객체.
@@ -53,7 +60,7 @@ class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int,
      */
     private val audioOutputUnit: AudioOutputUnit = when (outputType) {
         AUDIO_TRACK -> AudioTrackOutputUnit()
-        OBOE -> OboeAudioOutputUnit()
+        OBOE -> OboeOutputUnit()
         else -> throw IllegalArgumentException("Illegal outputType argument.")
     }
 
