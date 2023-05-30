@@ -26,7 +26,6 @@ class AudioPlayer(
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
-
     /**
      * 현재 AudioPlayer가 재생중인지를 나타내는 Boolean 값.
      */
@@ -34,9 +33,8 @@ class AudioPlayer(
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 파일 추출, 디코딩, 재생을 담당하는 private instance variables.
-
     /**
-     * MediaExtractor 초기화, 해제, 미디어 파일 추출, 재생 위치 조정 등의 작업을 담당하는 MediaExtractorManager 객체.
+     * 오디오 파일 입력을 담당하는 AudioInputUnit 객체.
      */
     private val audioInputUnit: AudioInputUnit = when (inputType) {
         MEDIA_EXTRACTOR -> MediaExtractorInputUnit()
@@ -44,7 +42,7 @@ class AudioPlayer(
     }
 
     /**
-     * MediaCodec 초기화, 해제, 입출력 버퍼 제공 및 회수, 인코딩/디코딩 등의 작업을 담당하는 MediaCodecManager 객체.
+     * 오디오 파일 처리(디코딩)을 담당하는 AudioDecodeProcessor 객체.
      */
     private val audioDecodeProcessor: AudioDecodeProcessor = when (decodeType) {
         MEDIA_CODEC -> MediaCodecDecodeProcessor()
@@ -52,7 +50,7 @@ class AudioPlayer(
     }
 
     /**
-     * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
+     * 오디오 파일 출력을 담당하는 AudioOutputUnit 객체.
      */
     private val audioOutputUnit: AudioOutputUnit = when (outputType) {
         AUDIO_TRACK -> AudioTrackOutputUnit()
@@ -61,13 +59,12 @@ class AudioPlayer(
     }
 
     /**
-     * 오디오를 재생하는 스레드 객체.
+     * 오디오를 재생하는 Thread 객체.
      */
     private var audioThread: Thread? = null
 
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 필요한 private variables.
-
     /**
      * 재생할 오디오 파일의 이름을 나타내는 String 값.
      */
@@ -75,7 +72,6 @@ class AudioPlayer(
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer가 외부에 제공하는 public methods.
-
     /**
      * 오디오 재생을 위한 리소스를 준비한다.
      */
@@ -85,16 +81,17 @@ class AudioPlayer(
             this.fileName = fileName
         }
 
-        // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
+        // AudioInputUnit을 구성하고, 재생할 압축된 오디오 데이터의 MediaFormat을 가져온다.
         val inputMediaFormat =
             audioInputUnit.configure(context.assets.openFd(this.fileName), "audio/")
 
-        // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
+        // 입력 오디오 데이터의 MediaFormat을 활용해 AudioDecodeProcessor를 구성하고, 출력할 디코딩된 오디오 데이터의 MediaFormat을 가져온다.
         val outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
 
-        // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
+        // 출력 오디오 데이터의 MediaFormat을 활용해 AudioOutputUnit을 구성한다.
         audioOutputUnit.configure(outputMediaFormat)
 
+        // 입력, 처리, 출력 객체를 구성한 후 Callback을 통해 AudioPlayer의 정보를 Client 측에 전달한다.
         val duration = (inputMediaFormat.getLong(MediaFormat.KEY_DURATION) / 1000 / 1000).toInt()
         onConfigure(audioInputUnit.name, audioDecodeProcessor.name, audioOutputUnit.name, duration)
         onInputFileReady(duration)
@@ -116,7 +113,7 @@ class AudioPlayer(
      */
     fun play() {
         if (audioThread == null || audioThread?.isInterrupted == true) {
-            configureAudioThread()
+            startAudioThread()
         }
     }
 
@@ -139,11 +136,10 @@ class AudioPlayer(
 
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer 내부적으로 사용하는 private methods.
-
     /**
      * 오디오 파일 추출, 디코딩, 재생을 처리하는 Thread 객체를 구성한다.
      */
-    private fun configureAudioThread() {
+    private fun startAudioThread() {
         audioThread = Thread {
             // Input data가 EOS에 도달했는지를 나타내는 Boolean 값.
             var isInputEOSReached = false
@@ -171,12 +167,16 @@ class AudioPlayer(
     }
 
     /**
-     * MediaCodecManager에 오디오 파일 디코딩을 요청한다.
+     * AudioDecodeProcessor에 압축된 오디오 파일의 디코딩을 요청한다.
      */
     private fun requestDecodeUntilEOS(): Boolean {
+        // AudioDecodeProcessor를 통해 입력 버퍼를 가져온다.
         val inputBufferInfo = audioDecodeProcessor.assignInputBuffer()
+
         if (inputBufferInfo.buffer != null) {
+            // AudioInputUnit을 통해 압축된 오디오 파일의 일부분을 읽어온다(입력).
             val extractionResult = audioInputUnit.extract(inputBufferInfo.buffer)
+            // 읽어온 압축된 오디오 데이터 처리(디코딩)를 AudioDecodeProcessor에 요청한다.
             audioDecodeProcessor.submitInputBuffer(
                 inputBufferInfo.bufferIndex,
                 0,
@@ -184,10 +184,12 @@ class AudioPlayer(
                 extractionResult.presentationTimeUs
             )
 
+            // 읽어온 압축된 오디오 데이터 크기가 음수라면 입력 EOS에 도달했다는 의미이므로 true를 반환한다.
             if (extractionResult.sampleSize < 0) {
                 return true
             }
         }
+        // 입력 EOS에 도달하지 않았다면 false를 반환한다.
         return false
     }
 
@@ -195,16 +197,24 @@ class AudioPlayer(
      * MediaCodecManager가 수행한 디코딩 결과를 처리한다.
      */
     private fun handleDecodeResultUntilEOS(): Boolean {
+        // AudioDecodeProcessor를 통해 출력 버퍼를 가져온다.
         val outputBufferInfo = audioDecodeProcessor.getOutputBuffer()
+
         if (outputBufferInfo.buffer != null) {
+            // AudioOutputUnit을 통해 디코딩된 오디오 데이터 재생(출력)을 요청한다.
             audioOutputUnit.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
+            // 디코딩된 오디오 데이터가 든 출력 버퍼를 AudioDecodeProcessor에 반환한다.
             audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
 
+            // Thread가 interrupt되지 않았다면 onPlay 콜백을 통해 현재 재생 위치를 전달한다.
             if (!Thread.currentThread().isInterrupted) {
                 onPlay((outputBufferInfo.info.presentationTimeUs / 1000 / 1000).toInt())
             }
+
+            // 디코딩된 오디오 데이터가 EOS에 도달했는지에 해당하는 OutputBufferInfo.isEOS 값을 반환한다.
             return outputBufferInfo.isEOS
         }
+        // 출력 EOS에 도달하지 않았다면 false를 반환한다.
         return false
     }
 
