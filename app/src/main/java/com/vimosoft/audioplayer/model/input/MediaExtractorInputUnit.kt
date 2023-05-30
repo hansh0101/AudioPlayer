@@ -48,7 +48,7 @@ class MediaExtractorInputUnit : AudioInputUnit() {
     }
 
     /**
-     * AudioInputUnit 객체 사용을 마친 후 리소스를 정리한다.
+     * MediaExtractorInputUnit 객체 사용을 마친 후 리소스를 정리한다.
      */
     override fun release() {
         mediaExtractor.release()
@@ -88,7 +88,6 @@ class MediaExtractorInputUnit : AudioInputUnit() {
 
     // ---------------------------------------------------------------------------------------------
     // MediaExtractorInputUnit 내부적으로 사용하는 private methods.
-
     /**
      * audio MIME 타입의 트랙 인덱스를 반환한다.
      */
