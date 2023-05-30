@@ -50,8 +50,7 @@ AudioSinkUnit::~AudioSinkUnit() {
  * @param size : 재생할 오디오 데이터의 크기
  */
 void AudioSinkUnit::outputAudio(const void *buffer, int32_t size) {
-    auto *audioBuffer = (int16_t *) buffer;
-    mStream->write(audioBuffer, getNumFrames(size), 1e9);
+    mStream->write(buffer, getNumFrames(size), 1e9);
 }
 
 /**
