@@ -83,7 +83,7 @@ class AudioPlayer(
 
         // AudioInputUnit을 구성하고, 재생할 압축된 오디오 데이터의 MediaFormat을 가져온다.
         val inputMediaFormat =
-            audioInputUnit.configure(context.assets.openFd(this.fileName), "audio/")
+            audioInputUnit.configure(context.assets.openFd(this.fileName))
 
         // 입력 오디오 데이터의 MediaFormat을 활용해 AudioDecodeProcessor를 구성하고, 출력할 디코딩된 오디오 데이터의 MediaFormat을 가져온다.
         val outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
