@@ -3,10 +3,10 @@ package com.vimosoft.audioplayer.model
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
-class OboeAudioOutputUnit {
+class OboeAudioOutputUnit : AudioOutputUnit() {
     private var audioSink: Long = 0L
 
-    fun configure(mediaFormat: MediaFormat) {
+    override fun configure(mediaFormat: MediaFormat) {
         val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
         val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 
@@ -15,14 +15,14 @@ class OboeAudioOutputUnit {
         }
     }
 
-    fun release() {
+    override fun release() {
         if (audioSink != 0L) {
             release(audioSink)
             audioSink = 0L
         }
     }
 
-    fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
+    override fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
         if (audioSink != 0L) {
             requestPlayback(audioSink, outputBuffer)
         }

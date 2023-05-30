@@ -2,12 +2,16 @@ package com.vimosoft.audioplayer.model
 
 import android.content.Context
 import android.media.MediaFormat
-import timber.log.Timber
 
 /**
  * 오디오 파일을 재생하는 객체.
  */
-class AudioPlayer(private val context: Context) {
+class AudioPlayer(
+    private val context: Context,
+    inputType: Int = MEDIA_EXTRACTOR,
+    decodeType: Int = MEDIA_CODEC,
+    outputType: Int = AUDIO_TRACK
+) {
     // ---------------------------------------------------------------------------------------------
     // 오디오 재생에 관한 상태를 나타내는 public variables.
     // 외부에서는 getter만 사용 가능하다.
@@ -36,18 +40,27 @@ class AudioPlayer(private val context: Context) {
     /**
      * MediaExtractor 초기화, 해제, 미디어 파일 추출, 재생 위치 조정 등의 작업을 담당하는 MediaExtractorManager 객체.
      */
-    private val audioInputUnit: AudioInputUnit = AudioInputUnit()
+    private val audioInputUnit: AudioInputUnit = when (inputType) {
+        MEDIA_EXTRACTOR -> MediaExtractorInputUnit()
+        else -> throw IllegalArgumentException("Illegal inputType argument.")
+    }
 
     /**
      * MediaCodec 초기화, 해제, 입출력 버퍼 제공 및 회수, 인코딩/디코딩 등의 작업을 담당하는 MediaCodecManager 객체.
      */
-    private val audioDecodeProcessor: AudioDecodeProcessor = AudioDecodeProcessor()
+    private val audioDecodeProcessor: AudioDecodeProcessor = when (decodeType) {
+        MEDIA_CODEC -> MediaCodecDecodeProcessor()
+        else -> throw IllegalArgumentException("Illegal decodeType argument.")
+    }
 
     /**
      * AudioTrack 초기화, 해제, 소리 출력 등의 작업을 담당하는 AudioTrackManager 객체.
      */
-//    private val audioOutputUnit: AudioOutputUnit = AudioOutputUnit()
-    private val audioOutputUnit: OboeAudioOutputUnit = OboeAudioOutputUnit()
+    private val audioOutputUnit: AudioOutputUnit = when (outputType) {
+        AUDIO_TRACK -> AudioTrackOutputUnit()
+        OBOE -> OboeAudioOutputUnit()
+        else -> throw IllegalArgumentException("Illegal outputType argument.")
+    }
 
     /**
      * 오디오를 재생하는 스레드 객체.
@@ -134,10 +147,7 @@ class AudioPlayer(private val context: Context) {
      * 오디오 파일 추출, 디코딩, 재생을 처리하는 Thread 객체를 구성한다.
      */
     private fun configureAudioThread() {
-        Timber.tag("main thread id").i("${Thread.currentThread().id}")
         audioThread = Thread {
-            Timber.tag("audio thread id").i("${Thread.currentThread().id}")
-
             // Input data가 EOS에 도달했는지를 나타내는 Boolean 값.
             var isInputEOSReached = false
             // Output data가 EOS에 도달했는지를 나타내는 Boolean 값.
@@ -155,7 +165,6 @@ class AudioPlayer(private val context: Context) {
 
                 // Input, Output data 모두 EOS에 도달했다면 다음 트랙 재생을 준비한다.
                 if (isInputEOSReached && isOutputEOSReached) {
-                    // TODO : 삐 소리를 계속 듣기 위해 ... 주석 처리하였다.
                     prepareNextTrack()
                     isInputEOSReached = false
                     isOutputEOSReached = false
@@ -209,5 +218,12 @@ class AudioPlayer(private val context: Context) {
         audioOutputUnit.release()
         prepare()
         playbackPosition = 0
+    }
+
+    companion object {
+        const val MEDIA_EXTRACTOR = 1
+        const val MEDIA_CODEC = 11
+        const val AUDIO_TRACK = 21
+        const val OBOE = 22
     }
 }
