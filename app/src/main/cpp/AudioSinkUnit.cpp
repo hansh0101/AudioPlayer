@@ -32,9 +32,9 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, boo
 
 AudioSinkUnit::~AudioSinkUnit() = default;
 
-void AudioSinkUnit::startAudio(const void *buffer) {
+void AudioSinkUnit::startAudio(const void *buffer, int32_t size) {
     auto *audioBuffer = (int16_t *) buffer;
-    mStream->write(audioBuffer, 1152, 1e9);
+    mStream->write(audioBuffer, getNumFrames(size), 1e9);
 }
 
 void AudioSinkUnit::setFormat(int bitDepth, bool isFloat) {
@@ -51,4 +51,23 @@ void AudioSinkUnit::setFormat(int bitDepth, bool isFloat) {
     } else {
         mFormat = oboe::AudioFormat::Unspecified;
     }
+}
+
+int AudioSinkUnit::getNumFrames(int size) {
+    int bitDepth;
+    switch (mFormat) {
+        case oboe::AudioFormat::Float:
+        case oboe::AudioFormat::I32:
+            bitDepth = 32;
+            break;
+        case oboe::AudioFormat::I24:
+            bitDepth = 24;
+            break;
+        case oboe::AudioFormat::I16:
+        default:
+            bitDepth = 16;
+    }
+
+    int numFrames = size / (mChannelCount * (bitDepth / 8));
+    return numFrames;
 }

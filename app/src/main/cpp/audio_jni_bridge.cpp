@@ -4,7 +4,7 @@
 using namespace std;
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_initialize(JNIEnv *env, jobject thiz,
+Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_initialize(JNIEnv *, jobject,
                                                                      jint channel_count,
                                                                      jint sample_rate,
                                                                      jint bit_depth,
@@ -14,7 +14,7 @@ Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_initialize(JNIEnv *env
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_release(JNIEnv *env, jobject thiz,
+Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_release(JNIEnv *, jobject,
                                                                   jlong audio_sink) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
     delete audioSink;
@@ -22,10 +22,11 @@ Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_release(JNIEnv *env, j
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_requestPlayback(JNIEnv *env, jobject thiz,
+Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_requestPlayback(JNIEnv *env, jobject,
                                                                           jlong audio_sink,
-                                                                          jobject output_buffer) {
+                                                                          jobject output_buffer,
+                                                                          jint size) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
     void *bufferPtr = env->GetDirectBufferAddress(output_buffer);
-    audioSink->startAudio(bufferPtr);
+    audioSink->startAudio(bufferPtr, size);
 }

@@ -15,7 +15,7 @@ public:
 
     ~AudioSinkUnit();
 
-    void startAudio(const void *buffer);
+    void startAudio(const void *buffer, int32_t size);
 
 private:
     // member variables
@@ -24,9 +24,11 @@ private:
 
     int mChannelCount;
     int mSampleRate;
-    oboe::AudioFormat mFormat;
+    oboe::AudioFormat mFormat = oboe::AudioFormat::Unspecified;
 
     void setFormat(int bitDepth, bool isFloat);
+
+    int getNumFrames(int size);
 };
 
 #endif

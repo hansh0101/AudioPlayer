@@ -42,7 +42,7 @@ class OboeOutputUnit : AudioOutputUnit() {
 
     override fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
         if (audioSink != 0L) {
-            requestPlayback(audioSink, outputBuffer)
+            requestPlayback(audioSink, outputBuffer, size)
         }
     }
 
@@ -54,7 +54,7 @@ class OboeOutputUnit : AudioOutputUnit() {
     ): Long
 
     private external fun release(audioSink: Long)
-    private external fun requestPlayback(audioSink: Long, outputBuffer: ByteBuffer)
+    private external fun requestPlayback(audioSink: Long, outputBuffer: ByteBuffer, size: Int)
 
     companion object {
         init {
