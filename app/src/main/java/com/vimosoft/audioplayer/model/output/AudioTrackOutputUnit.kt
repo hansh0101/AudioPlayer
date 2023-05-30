@@ -27,7 +27,11 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
     override fun configure(mediaFormat: MediaFormat) {
         val sampleRateInHz = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
-        val audioEncodingFormat = AudioFormat.ENCODING_PCM_16BIT
+        val audioEncodingFormat = try {
+            mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING)
+        } catch (e: Exception) {
+            AudioFormat.ENCODING_PCM_16BIT
+        }
         val bufferSizeInBytes =
             AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioEncodingFormat)
 

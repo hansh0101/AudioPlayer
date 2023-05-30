@@ -27,13 +27,15 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
     /**
      * MediaCodec 객체를 구성하고 시작 가능한 상태로 만든다.
      */
-    override fun configure(mediaFormat: MediaFormat) {
+    override fun configure(mediaFormat: MediaFormat): MediaFormat {
         val codecName = MediaCodecList(MediaCodecList.ALL_CODECS).findDecoderForFormat(mediaFormat)
 
         mediaCodec = MediaCodec.createByCodecName(codecName).apply {
             configure(mediaFormat, null, null, 0)
             start()
         }
+
+        return mediaCodec.outputFormat
     }
 
     /**

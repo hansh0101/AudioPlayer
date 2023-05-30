@@ -1,15 +1,21 @@
 #include "AudioSinkUnit.h"
 
-AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate)
+AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth)
         : mChannelCount(channelCount), mSampleRate(sampleRate) {
     oboe::AudioStreamBuilder builder;
-    // TODO - 파라미터로 받을 수 있도록 수정할 것
+
+    if (bitDepth == 32) {
+        mFormat = oboe::AudioFormat::Float;
+    } else if (bitDepth == 16) {
+        mFormat = oboe::AudioFormat::I16;
+    }
+
     oboe::Result result = builder.setSharingMode(oboe::SharingMode::Exclusive)
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
-            ->setChannelCount(mChannelCount) // here
-            ->setSampleRate(mSampleRate) // here
+            ->setChannelCount(mChannelCount)
+            ->setSampleRate(mSampleRate)
             ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Best)
-            ->setFormat(oboe::AudioFormat::I16) // here
+            ->setFormat(mFormat)
             ->openStream(mStream);
 
     LOGI("SharingMode : %s", oboe::convertToText(mStream->getSharingMode()));

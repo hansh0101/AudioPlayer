@@ -11,7 +11,7 @@ using namespace std;
 
 class AudioSinkUnit {
 public:
-    AudioSinkUnit(int channelCount, int sampleRate);
+    AudioSinkUnit(int channelCount, int sampleRate, int bitDepth);
 
     ~AudioSinkUnit();
 
@@ -24,14 +24,7 @@ private:
 
     int mChannelCount;
     int mSampleRate;
-
-    // variables for make sine PCM.
-    float mAmplitude = 10000;
-    float mFrequency = 440;
-    float mPi = M_PI;
-    float mTwoPi = mPi * 2;
-    double mPhaseIncrement = mFrequency * mTwoPi / (double) (mSampleRate);
-    float mPhase = 0.0f;
+    oboe::AudioFormat mFormat;
 };
 
 #endif

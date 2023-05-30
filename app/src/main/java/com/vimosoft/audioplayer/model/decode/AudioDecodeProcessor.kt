@@ -5,7 +5,7 @@ import android.media.MediaFormat
 import java.nio.ByteBuffer
 
 abstract class AudioDecodeProcessor {
-    abstract fun configure(mediaFormat: MediaFormat)
+    abstract fun configure(mediaFormat: MediaFormat): MediaFormat
     abstract fun release()
     abstract fun assignInputBuffer(): InputBufferInfo
     abstract fun submitInputBuffer(

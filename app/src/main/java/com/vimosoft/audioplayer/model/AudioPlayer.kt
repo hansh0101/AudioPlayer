@@ -77,11 +77,6 @@ class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int,
      */
     private var fileName: String = ""
 
-    /**
-     * 미디어 파일의 포맷.
-     */
-    private lateinit var mediaFormat: MediaFormat
-
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer가 외부에 제공하는 public methods.
 
@@ -95,15 +90,15 @@ class AudioPlayer(private val context: Context, inputType: Int, decodeType: Int,
         }
 
         // MediaExtractorManager를 통해 MediaExtractor 객체를 구성한다.
-        mediaFormat =
+        val inputMediaFormat =
             audioInputUnit.configure(context.assets.openFd(this.fileName), "audio/")
-        duration = mediaFormat.getLong(MediaFormat.KEY_DURATION)
+        duration = inputMediaFormat.getLong(MediaFormat.KEY_DURATION)
 
         // MediaCodecManager를 통해 MediaCodec 객체를 구성한다.
-        audioDecodeProcessor.configure(mediaFormat)
+        val outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
 
         // AudioTrackManager를 통해 AudioTrack 객체를 구성한다.
-        audioOutputUnit.configure(mediaFormat)
+        audioOutputUnit.configure(outputMediaFormat)
     }
 
     /**

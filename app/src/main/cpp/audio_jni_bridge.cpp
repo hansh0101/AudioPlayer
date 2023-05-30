@@ -6,8 +6,9 @@ using namespace std;
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_initialize(JNIEnv *env, jobject thiz,
                                                               jint channel_count,
-                                                              jint sample_rate) {
-    auto *audioSink = new AudioSinkUnit(channel_count, sample_rate);
+                                                              jint sample_rate,
+                                                              jint bit_depth) {
+    auto *audioSink = new AudioSinkUnit(channel_count, sample_rate, bit_depth);
     return (jlong) audioSink;
 }
 
