@@ -24,7 +24,7 @@ class MediaExtractorInputUnit : AudioInputUnit() {
     // ---------------------------------------------------------------------------------------------
     // MediaExtractorInputUnit이 외부에 제공하는 public methods.
     /**
-     * MediaExtractorInputUnit 객체를 구성하고 입력 오디오 파일(데이터)의 MediaFormat을 반환한다.
+     * MediaExtractor 객체를 구성하고 입력 오디오 파일(데이터)의 MediaFormat을 반환한다.
      */
     override fun configure(assetFileDescriptor: AssetFileDescriptor): MediaFormat {
         // MediaExtractor 객체를 생성하고 data source를 설정한다.
