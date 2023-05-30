@@ -40,7 +40,9 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, boo
 /**
  * AudioSinkUnit 객체 사용을 마친 후 리소스를 정리한다.
  */
-AudioSinkUnit::~AudioSinkUnit() = default;
+AudioSinkUnit::~AudioSinkUnit() {
+    mStream->close();
+}
 
 /**
  * AudioSinkUnit을 통해 buffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
