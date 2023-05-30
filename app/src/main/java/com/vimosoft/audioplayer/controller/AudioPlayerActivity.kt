@@ -136,6 +136,6 @@ class AudioPlayerActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val FILE_NAME = "music.mp3"
+        const val FILE_NAME = "oasis.mp3"
     }
 }
