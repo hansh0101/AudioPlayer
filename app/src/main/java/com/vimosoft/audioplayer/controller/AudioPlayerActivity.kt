@@ -140,18 +140,18 @@ class AudioPlayerActivity : AppCompatActivity() {
                 pauseMusic()
             }
             buttonAudioTrack.setOnClickListener {
-                // TODO - AudioPlayer 객체 내 OutputUnit만 바꿔 끼울 수 없는가 ?
                 val isPlayed = audioPlayer?.isPlaying ?: false
                 pauseMusic()
+                audioPlayer?.release()
                 configureAudioPlayer(outputType = AudioPlayer.AUDIO_TRACK)
                 if (isPlayed) {
                     playMusic()
                 }
             }
             buttonOboe.setOnClickListener {
-                // TODO - AudioPlayer 객체 내 OutputUnit만 바꿔 끼울 수 없는가 ?
                 val isPlayed = audioPlayer?.isPlaying ?: false
                 pauseMusic()
+                audioPlayer?.release()
                 configureAudioPlayer(outputType = AudioPlayer.OBOE)
                 if (isPlayed) {
                     playMusic()

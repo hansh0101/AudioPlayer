@@ -3,6 +3,7 @@ package com.vimosoft.audioplayer.model.decode
 import android.media.MediaCodec
 import android.media.MediaCodecList
 import android.media.MediaFormat
+import timber.log.Timber
 
 /**
  * 오디오 파일 재생을 위해 MediaCodec을 통해 처리(디코딩)를 담당하는 객체.
@@ -46,7 +47,6 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
      */
     override fun release() {
         mediaCodec.run {
-            stop()
             release()
         }
     }
@@ -119,7 +119,9 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
      * 출력 버퍼 사용을 마치고 MediaCodec 객체에 출력 버퍼를 반납한다.
      */
     override fun giveBackOutputBuffer(bufferIndex: Int, render: Boolean) {
-        mediaCodec.releaseOutputBuffer(bufferIndex, render)
+        runCatching {
+            mediaCodec.releaseOutputBuffer(bufferIndex, render)
+        }.onFailure { Timber.e(it) }
     }
 
     /**
