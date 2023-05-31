@@ -101,11 +101,11 @@ class AudioPlayer(
      * 오디오 재생을 마친 후 리소스를 정리한다.
      */
     fun release() {
+        audioThread?.interrupt()
+        audioThread = null
         audioInputUnit.release()
         audioDecodeProcessor.release()
         audioOutputUnit.release()
-        audioThread?.interrupt()
-        audioThread = null
     }
 
     /**

@@ -26,27 +26,27 @@ class OboeOutputUnit : AudioOutputUnit() {
      * Oboe AudioStream 객체를 구성한다.
      */
     override fun configure(mediaFormat: MediaFormat) {
-        val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-        val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-        var isFloat = false
-        val bitDepth = try {
-            when (mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
-                AudioFormat.ENCODING_PCM_FLOAT -> {
-                    isFloat = true
-                    32
-                }
-
-                AudioFormat.ENCODING_PCM_32BIT -> 32
-                AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24
-                AudioFormat.ENCODING_PCM_16BIT -> 16
-                AudioFormat.ENCODING_PCM_8BIT -> 8
-                else -> 16
-            }
-        } catch (e: Exception) {
-            16
-        }
-
         if (oboeStreamAddress == 0L) {
+            val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+            val sampleRate = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            var isFloat = false
+            val bitDepth = try {
+                when (mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
+                    AudioFormat.ENCODING_PCM_FLOAT -> {
+                        isFloat = true
+                        32
+                    }
+
+                    AudioFormat.ENCODING_PCM_32BIT -> 32
+                    AudioFormat.ENCODING_PCM_24BIT_PACKED -> 24
+                    AudioFormat.ENCODING_PCM_16BIT -> 16
+                    AudioFormat.ENCODING_PCM_8BIT -> 8
+                    else -> 16
+                }
+            } catch (e: Exception) {
+                16
+            }
+
             oboeStreamAddress = initialize(channelCount, sampleRate, bitDepth, isFloat)
         }
     }

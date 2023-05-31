@@ -52,6 +52,11 @@ private:
     int mSampleRate;
 
     /**
+     * 샘플 당 비트 수
+     */
+    int mBitDepth;
+
+    /**
      * 출력 데이터의 AudioFormat.
      */
     oboe::AudioFormat mFormat = oboe::AudioFormat::Unspecified;
@@ -62,13 +67,6 @@ private:
      * @param isFloat : 샘플의 AudioFormat이 Flaot인지 나타내는 bool 변수
      */
     void setFormat(int bitDepth, bool isFloat);
-
-    /**
-     * 주어진 오디오 데이터의 크기를 통해 재생할 Frame 수를 계산해 반환한다.
-     * @param size : 오디오 데이터의 크기(Bytes)
-     * @return : 재생할 Frame 수
-     */
-    int getNumFrames(int size);
 };
 
 #endif

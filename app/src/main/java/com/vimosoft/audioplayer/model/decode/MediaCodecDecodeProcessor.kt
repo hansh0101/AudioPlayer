@@ -47,6 +47,7 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
      */
     override fun release() {
         mediaCodec.run {
+            stop()
             release()
         }
     }

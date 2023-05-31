@@ -8,7 +8,7 @@
  * @param isFloat : 샘플의 AudioFormat이 Float인지 나타내는 bool 변수
  */
 AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, bool isFloat)
-        : mChannelCount(channelCount), mSampleRate(sampleRate) {
+        : mChannelCount(channelCount), mSampleRate(sampleRate), mBitDepth(bitDepth) {
     oboe::AudioStreamBuilder builder;
 
     setFormat(bitDepth, isFloat);
@@ -50,7 +50,7 @@ AudioSinkUnit::~AudioSinkUnit() {
  * @param size : 재생할 오디오 데이터의 크기
  */
 void AudioSinkUnit::outputAudio(const void *buffer, int32_t size) {
-    mStream->write(buffer, getNumFrames(size), 1e9);
+    mStream->write(buffer, size / (mChannelCount * (mBitDepth / 8)), 1e9);
 }
 
 /**
@@ -72,28 +72,4 @@ void AudioSinkUnit::setFormat(int bitDepth, bool isFloat) {
     } else {
         mFormat = oboe::AudioFormat::Unspecified;
     }
-}
-
-/**
- * 주어진 오디오 데이터의 크기를 통해 재생할 Frame 수를 계산해 반환한다.
- * @param size : 오디오 데이터의 크기(Bytes)
- * @return : 재생할 Frame 수
- */
-int AudioSinkUnit::getNumFrames(int size) {
-    int bitDepth;
-    switch (mFormat) {
-        case oboe::AudioFormat::Float:
-        case oboe::AudioFormat::I32:
-            bitDepth = 32;
-            break;
-        case oboe::AudioFormat::I24:
-            bitDepth = 24;
-            break;
-        case oboe::AudioFormat::I16:
-        default:
-            bitDepth = 16;
-    }
-
-    int numFrames = size / (mChannelCount * (bitDepth / 8));
-    return numFrames;
 }
