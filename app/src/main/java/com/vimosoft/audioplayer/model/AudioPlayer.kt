@@ -52,7 +52,7 @@ class AudioPlayer(
     /**
      * 오디오 파일 출력을 담당하는 AudioOutputUnit 객체.
      */
-    private val audioOutputUnit: AudioOutputUnit = when (outputType) {
+    private var audioOutputUnit: AudioOutputUnit = when (outputType) {
         AUDIO_TRACK -> AudioTrackOutputUnit()
         OBOE -> OboeOutputUnit()
         else -> throw IllegalArgumentException("Illegal outputType argument.")
@@ -70,6 +70,17 @@ class AudioPlayer(
      */
     private var fileName: String = ""
 
+    /**
+     * 오디오 파일 재생 길이
+     */
+    private val duration by lazy { (inputMediaFormat.getLong(MediaFormat.KEY_DURATION) / 1000 / 1000).toInt() }
+
+    /**
+     * 입력, 출력 미디어 포맷
+     */
+    private lateinit var inputMediaFormat: MediaFormat
+    private lateinit var outputMediaFormat: MediaFormat
+
     // ---------------------------------------------------------------------------------------------
     // AudioPlayer가 외부에 제공하는 public methods.
     /**
@@ -82,19 +93,35 @@ class AudioPlayer(
         }
 
         // AudioInputUnit을 구성하고, 재생할 압축된 오디오 데이터의 MediaFormat을 가져온다.
-        val inputMediaFormat =
+        inputMediaFormat =
             audioInputUnit.configure(context.assets.openFd(this.fileName))
 
         // 입력 오디오 데이터의 MediaFormat을 활용해 AudioDecodeProcessor를 구성하고, 출력할 디코딩된 오디오 데이터의 MediaFormat을 가져온다.
-        val outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
+        outputMediaFormat = audioDecodeProcessor.configure(inputMediaFormat)
 
         // 출력 오디오 데이터의 MediaFormat을 활용해 AudioOutputUnit을 구성한다.
         audioOutputUnit.configure(outputMediaFormat)
 
         // 입력, 처리, 출력 객체를 구성한 후 Callback을 통해 AudioPlayer의 정보를 Client 측에 전달한다.
-        val duration = (inputMediaFormat.getLong(MediaFormat.KEY_DURATION) / 1000 / 1000).toInt()
         onConfigure(audioInputUnit.name, audioDecodeProcessor.name, audioOutputUnit.name, duration)
         onInputFileReady(duration)
+    }
+
+    fun changeOutputUnit(outputType: Int) {
+        val oldOutputUnit = audioOutputUnit
+        audioOutputUnit = when (outputType) {
+            AUDIO_TRACK -> {
+                AudioTrackOutputUnit()
+            }
+
+            OBOE -> {
+                OboeOutputUnit()
+            }
+
+            else -> throw IllegalArgumentException("Illegal outputType argument.")
+        }.apply { configure(outputMediaFormat) }
+        oldOutputUnit.release()
+        onConfigure(audioInputUnit.name, audioDecodeProcessor.name, audioOutputUnit.name, duration)
     }
 
     /**

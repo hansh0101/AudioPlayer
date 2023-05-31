@@ -140,22 +140,10 @@ class AudioPlayerActivity : AppCompatActivity() {
                 pauseMusic()
             }
             buttonAudioTrack.setOnClickListener {
-                val isPlayed = audioPlayer?.isPlaying ?: false
-                pauseMusic()
-                audioPlayer?.release()
-                configureAudioPlayer(outputType = AudioPlayer.AUDIO_TRACK)
-                if (isPlayed) {
-                    playMusic()
-                }
+                audioPlayer?.changeOutputUnit(AudioPlayer.AUDIO_TRACK)
             }
             buttonOboe.setOnClickListener {
-                val isPlayed = audioPlayer?.isPlaying ?: false
-                pauseMusic()
-                audioPlayer?.release()
-                configureAudioPlayer(outputType = AudioPlayer.OBOE)
-                if (isPlayed) {
-                    playMusic()
-                }
+                audioPlayer?.changeOutputUnit(AudioPlayer.OBOE)
             }
             seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 // 원하는 재생 위치를 나타내는 Long 변수.
