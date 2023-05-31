@@ -3,6 +3,7 @@
 
 #include <oboe/Oboe.h>
 #include <android/log.h>
+#include <queue>
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"AudioSinkUnit",__VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AudioSinkUnit",__VA_ARGS__)
@@ -12,7 +13,7 @@ using namespace std;
 /**
  * Oboe의 AudioStream을 통해 출력을 처리하는 객체.
  */
-class AudioSinkUnit {
+class AudioSinkUnit : public oboe::AudioStreamDataCallback {
 public:
     /**
      * AudioSinkUnit 객체를 구성한다.
@@ -33,7 +34,10 @@ public:
      * @param buffer : 재생할 오디오 데이터가 들어있는 버퍼
      * @param size : 재생할 오디오 데이터의 크기
      */
-    void outputAudio(const void *buffer, int32_t size);
+    void requestPlayback(void *buffer, int32_t size);
+
+    oboe::DataCallbackResult
+    onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override;
 
 private:
     /**
@@ -52,11 +56,6 @@ private:
     int mSampleRate;
 
     /**
-     * 샘플 당 비트 수
-     */
-    int mBitDepth;
-
-    /**
      * 출력 데이터의 AudioFormat.
      */
     oboe::AudioFormat mFormat = oboe::AudioFormat::Unspecified;
@@ -67,6 +66,13 @@ private:
      * @param isFloat : 샘플의 AudioFormat이 Flaot인지 나타내는 bool 변수
      */
     void setFormat(int bitDepth, bool isFloat);
+
+    struct AudioDataInfo {
+        void *audioData;
+        int size;
+    };
+
+    queue<AudioDataInfo> q;
 };
 
 #endif

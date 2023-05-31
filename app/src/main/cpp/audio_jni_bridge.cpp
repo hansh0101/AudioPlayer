@@ -36,5 +36,5 @@ Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_requestPlayback(JNIEnv
                                                                           jint size) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
     void *bufferPtr = env->GetDirectBufferAddress(output_buffer);
-    audioSink->outputAudio(bufferPtr, size);
+    audioSink->requestPlayback(bufferPtr, size);
 }

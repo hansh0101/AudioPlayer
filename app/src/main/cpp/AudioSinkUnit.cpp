@@ -8,7 +8,7 @@
  * @param isFloat : 샘플의 AudioFormat이 Float인지 나타내는 bool 변수
  */
 AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, bool isFloat)
-        : mChannelCount(channelCount), mSampleRate(sampleRate), mBitDepth(bitDepth) {
+        : mChannelCount(channelCount), mSampleRate(sampleRate) {
     oboe::AudioStreamBuilder builder;
 
     setFormat(bitDepth, isFloat);
@@ -17,14 +17,17 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, boo
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
             ->setChannelCount(mChannelCount)
             ->setSampleRate(mSampleRate)
-            ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Best)
             ->setFormat(mFormat)
+            ->setFramesPerCallback(1152)
+            ->setDataCallback(this)
             ->openStream(mStream);
 
     LOGI("SharingMode : %s", oboe::convertToText(mStream->getSharingMode()));
     LOGI("PerformanceMode : %s", oboe::convertToText(mStream->getPerformanceMode()));
     LOGI("ChannelCount : %d", mStream->getChannelCount());
     LOGI("SampleRate : %d", mStream->getSampleRate());
+    LOGI("Frames per callback : %d", mStream->getFramesPerCallback());
+    LOGI("Frames per burst : %d", mStream->getFramesPerBurst());
     LOGI("Format : %s", oboe::convertToText(mStream->getFormat()));
 
     if (result != oboe::Result::OK) {
@@ -49,8 +52,9 @@ AudioSinkUnit::~AudioSinkUnit() {
  * @param buffer : 재생할 오디오 데이터가 들어있는 버퍼
  * @param size : 재생할 오디오 데이터의 크기
  */
-void AudioSinkUnit::outputAudio(const void *buffer, int32_t size) {
-    mStream->write(buffer, size / (mChannelCount * (mBitDepth / 8)), 1e9);
+void AudioSinkUnit::requestPlayback(void *buffer, int32_t size) {
+    AudioDataInfo audioDataInfo = AudioDataInfo {buffer, size};
+    q.push(audioDataInfo);
 }
 
 /**
@@ -72,4 +76,16 @@ void AudioSinkUnit::setFormat(int bitDepth, bool isFloat) {
     } else {
         mFormat = oboe::AudioFormat::Unspecified;
     }
+}
+
+oboe::DataCallbackResult
+AudioSinkUnit::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) {
+    if (!q.empty()) {
+        AudioDataInfo audioDataInfo = q.front();
+        q.pop();
+
+        memcpy(audioData, audioDataInfo.audioData, audioDataInfo.size);
+    }
+
+    return oboe::DataCallbackResult::Continue;
 }
