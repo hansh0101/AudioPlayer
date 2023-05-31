@@ -30,4 +30,23 @@ abstract class AudioOutputUnit() {
      * outputBuffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
      */
     abstract fun outputAudio(outputBuffer: ByteBuffer, size: Int)
+
+    protected fun copyByteBuffer(sourceBuffer : ByteBuffer): ByteBuffer {
+        val destinationBuffer = if (sourceBuffer.isDirect) {
+            ByteBuffer.allocateDirect(sourceBuffer.capacity())
+        } else {
+            ByteBuffer.allocate(sourceBuffer.capacity())
+        }
+        val position = sourceBuffer.position()
+        val limit = sourceBuffer.limit()
+        val byteOrder = sourceBuffer.order()
+
+        sourceBuffer.rewind()
+        destinationBuffer.order(byteOrder)
+        destinationBuffer.put(sourceBuffer)
+        destinationBuffer.position(position)
+        destinationBuffer.limit(limit)
+
+        return destinationBuffer
+    }
 }
