@@ -45,6 +45,7 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, boo
  */
 AudioSinkUnit::~AudioSinkUnit() {
     mStream->close();
+    while (!q.empty()) q.pop();
 }
 
 /**
@@ -84,6 +85,7 @@ AudioSinkUnit::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int
         AudioDataInfo audioDataInfo = q.front();
         q.pop();
 
+        LOGI("address : %p", audioDataInfo.audioData);
         memcpy(audioData, audioDataInfo.audioData, audioDataInfo.size);
     } else {
         memset(audioData, 0, numFrames * 2 /* mChannelCount */ * 2 /* mBitDepth / 8 */);
