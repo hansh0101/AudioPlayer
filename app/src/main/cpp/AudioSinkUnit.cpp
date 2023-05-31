@@ -8,7 +8,7 @@
  * @param isFloat : 샘플의 AudioFormat이 Float인지 나타내는 bool 변수
  */
 AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, bool isFloat)
-        : mChannelCount(channelCount), mSampleRate(sampleRate) {
+        : mChannelCount(channelCount), mSampleRate(sampleRate), mBitDepth(bitDepth) {
     oboe::AudioStreamBuilder builder;
 
     setFormat(bitDepth, isFloat);
@@ -53,7 +53,7 @@ AudioSinkUnit::~AudioSinkUnit() {
  * @param size : 재생할 오디오 데이터의 크기
  */
 void AudioSinkUnit::requestPlayback(void *buffer, int32_t size) {
-    AudioDataInfo audioDataInfo = AudioDataInfo {buffer, size};
+    AudioDataInfo audioDataInfo = AudioDataInfo{buffer, size};
     q.push(audioDataInfo);
 }
 
@@ -85,6 +85,8 @@ AudioSinkUnit::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int
         q.pop();
 
         memcpy(audioData, audioDataInfo.audioData, audioDataInfo.size);
+    } else {
+        memset(audioData, 0, numFrames * 2 /* mChannelCount */ * 2 /* mBitDepth / 8 */);
     }
 
     return oboe::DataCallbackResult::Continue;

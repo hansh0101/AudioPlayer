@@ -55,6 +55,8 @@ private:
      */
     int mSampleRate;
 
+    int mBitDepth;
+
     /**
      * 출력 데이터의 AudioFormat.
      */
