@@ -110,6 +110,7 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
             val outputBuffer = mediaCodec.getOutputBuffer(outputBufferIndex)
 
             if (outputBuffer != null) {
+                // 원본 출력 버퍼를 buffer에 복사한다.
                 val buffer = copyByteBuffer(outputBuffer)
                 OutputBufferInfo(bufferInfo, outputBufferIndex, buffer, isEOS)
             } else {

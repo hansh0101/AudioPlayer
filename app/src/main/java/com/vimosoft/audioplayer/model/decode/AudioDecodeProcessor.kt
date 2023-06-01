@@ -59,19 +59,30 @@ abstract class AudioDecodeProcessor {
      */
     abstract fun flush()
 
+    /**
+     * sourceBuffer를 destinationBuffer로 깊은 복사를 한 후 destinationBuffer를 반환한다.
+     */
     protected fun copyByteBuffer(sourceBuffer: ByteBuffer) : ByteBuffer {
+        // Direct Buffer인지 확인 후 해당하는 Buffer를 생성한다.
         val destinationBuffer = if (sourceBuffer.isDirect) {
             ByteBuffer.allocateDirect(sourceBuffer.capacity())
         } else {
             ByteBuffer.allocate(sourceBuffer.capacity())
         }
+
+        // sourceBuffer의 position, limit, byteOrder를 저장해둔다.
         val position = sourceBuffer.position()
         val limit = sourceBuffer.limit()
         val byteOrder = sourceBuffer.order()
 
+        // sourceBuffer의 position을 0으로 돌려 처음부터 읽을 준비를 한다.
         sourceBuffer.rewind()
+        // destinationBuffer의 order를 sourceBuffer의 order와 맞춘다.
         destinationBuffer.order(byteOrder)
+        // destinationBuffer에 sourceBuffer 데이터를 복사한다.
         destinationBuffer.put(sourceBuffer)
+
+        // destinationBuffer의 position, limit을 sourceBuffer의 원래 position, limit과 맞춘다.
         destinationBuffer.position(position)
         destinationBuffer.limit(limit)
 
