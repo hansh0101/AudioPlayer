@@ -49,12 +49,13 @@ AudioSinkUnit::~AudioSinkUnit() {
 }
 
 /**
- * AudioSinkUnit을 통해 buffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
- * @param buffer : 재생할 오디오 데이터가 들어있는 버퍼
+ * AudioSinkUnit을 통해 buffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력을 요청한다.
+ * @param audioDataPtr : 재생할 오디오 데이터의 주소를 가리키는 포인터
  * @param size : 재생할 오디오 데이터의 크기
  */
-void AudioSinkUnit::requestPlayback(void *buffer, int32_t size) {
-    AudioDataInfo audioDataInfo = AudioDataInfo{buffer, size};
+void AudioSinkUnit::requestPlayback(void *audioDataPtr, int32_t size) {
+    LOGI("%p : address in requestPlayback()", audioDataPtr);
+    AudioDataInfo audioDataInfo = AudioDataInfo{audioDataPtr, size};
     q.push(audioDataInfo);
 }
 
@@ -85,8 +86,8 @@ AudioSinkUnit::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int
         AudioDataInfo audioDataInfo = q.front();
         q.pop();
 
-        LOGI("address : %p", audioDataInfo.audioData);
-        memcpy(audioData, audioDataInfo.audioData, audioDataInfo.size);
+        LOGI("%p : address in onAudioReady()", audioDataInfo.audioDataPtr);
+        memcpy(audioData, audioDataInfo.audioDataPtr, audioDataInfo.size);
     } else {
         memset(audioData, 0, numFrames * 2 /* mChannelCount */ * 2 /* mBitDepth / 8 */);
     }

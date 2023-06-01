@@ -30,11 +30,11 @@ public:
     ~AudioSinkUnit();
 
     /**
-     * AudioSinkUnit을 통해 buffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
-     * @param buffer : 재생할 오디오 데이터가 들어있는 버퍼
+     * AudioSinkUnit을 통해 buffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력을 요청한다.
+     * @param audioDataPtr : 재생할 오디오 데이터의 주소를 가리키는 포인터
      * @param size : 재생할 오디오 데이터의 크기
      */
-    void requestPlayback(void *buffer, int32_t size);
+    void requestPlayback(void *audioDataPtr, int32_t size);
 
     oboe::DataCallbackResult
     onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override;
@@ -70,7 +70,7 @@ private:
     void setFormat(int bitDepth, bool isFloat);
 
     struct AudioDataInfo {
-        void *audioData;
+        void *audioDataPtr;
         int size;
     };
 

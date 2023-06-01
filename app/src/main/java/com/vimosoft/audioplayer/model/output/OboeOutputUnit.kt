@@ -66,7 +66,9 @@ class OboeOutputUnit : AudioOutputUnit() {
      */
     override fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
         if (oboeStreamAddress != 0L) {
-            requestPlayback(oboeStreamAddress, outputBuffer, size)
+            val outputByteArray = ByteArray(size)
+            outputBuffer.get(outputByteArray)
+            requestPlayback(oboeStreamAddress, outputByteArray, size)
         }
     }
 
@@ -92,7 +94,7 @@ class OboeOutputUnit : AudioOutputUnit() {
      */
     private external fun requestPlayback(
         oboeStreamAddress: Long,
-        outputBuffer: ByteBuffer,
+        outputByteArray: ByteArray,
         size: Int
     )
 
