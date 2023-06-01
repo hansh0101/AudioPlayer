@@ -72,9 +72,7 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
      * AudioTrack 객체를 사용해 outputBuffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.
      */
     override fun outputAudio(outputBuffer: ByteBuffer, size: Int) {
-        val copiedBuffer = copyByteBuffer(outputBuffer)
-        audioTrack.write(copiedBuffer, size, AudioTrack.WRITE_BLOCKING)
-        outputBuffer.clear()
+        audioTrack.write(outputBuffer, size, AudioTrack.WRITE_BLOCKING)
     }
 
     // ---------------------------------------------------------------------------------------------

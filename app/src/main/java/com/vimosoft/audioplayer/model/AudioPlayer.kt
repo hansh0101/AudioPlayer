@@ -228,14 +228,16 @@ class AudioPlayer(
         val outputBufferInfo = audioDecodeProcessor.getOutputBuffer()
 
         if (outputBufferInfo.buffer != null) {
-            // AudioOutputUnit을 통해 디코딩된 오디오 데이터 재생(출력)을 요청한다.
-            audioOutputUnit.outputAudio(outputBufferInfo.buffer, outputBufferInfo.info.size)
-            // 디코딩된 오디오 데이터가 든 출력 버퍼를 AudioDecodeProcessor에 반환한다.
+            val buffer = outputBufferInfo.buffer
+            val size = outputBufferInfo.info.size
+            val presentationTimeUs = outputBufferInfo.info.presentationTimeUs
+
             audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
+            audioOutputUnit.outputAudio(buffer, size)
 
             // Thread가 interrupt되지 않았다면 onPlay 콜백을 통해 현재 재생 위치를 전달한다.
             if (!Thread.currentThread().isInterrupted) {
-                onPlay((outputBufferInfo.info.presentationTimeUs / 1000 / 1000).toInt())
+                onPlay((presentationTimeUs / 1000 / 1000).toInt())
             }
 
             // 디코딩된 오디오 데이터가 EOS에 도달했는지에 해당하는 OutputBufferInfo.isEOS 값을 반환한다.

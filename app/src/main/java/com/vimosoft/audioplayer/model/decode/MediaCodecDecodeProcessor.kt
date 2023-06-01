@@ -108,7 +108,13 @@ class MediaCodecDecodeProcessor : AudioDecodeProcessor() {
             // 출력 버퍼의 인덱스가 유효하다면 MediaCodec이 제공하는 출력 버퍼의 정보가 담긴 BufferInfo 객체와 출력 버퍼 인덱스,
             // 출력 버퍼와 EOS 도달 여부를 OutputBufferInfo 객체에 담아 반환한다.
             val outputBuffer = mediaCodec.getOutputBuffer(outputBufferIndex)
-            OutputBufferInfo(bufferInfo, outputBufferIndex, outputBuffer, isEOS)
+
+            if (outputBuffer != null) {
+                val buffer = copyByteBuffer(outputBuffer)
+                OutputBufferInfo(bufferInfo, outputBufferIndex, buffer, isEOS)
+            } else {
+                OutputBufferInfo(bufferInfo, outputBufferIndex, null, isEOS)
+            }
         } else {
             // 출력 버퍼의 인덱스가 유효하지 않다면 MediaCodec이 제공하는 출력 버퍼의 정보가 담긴 BufferInfo 객체와 출력 버퍼 인덱스,
             // null과 EOS 도달 여부를 OutputBufferInfo 객체에 담아 반환한다.

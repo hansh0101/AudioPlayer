@@ -58,6 +58,25 @@ abstract class AudioDecodeProcessor {
      * AudioDecodeProcessor 객체가 디코딩 중이던 데이터를 flush한다.
      */
     abstract fun flush()
+
+    protected fun copyByteBuffer(sourceBuffer: ByteBuffer) : ByteBuffer {
+        val destinationBuffer = if (sourceBuffer.isDirect) {
+            ByteBuffer.allocateDirect(sourceBuffer.capacity())
+        } else {
+            ByteBuffer.allocate(sourceBuffer.capacity())
+        }
+        val position = sourceBuffer.position()
+        val limit = sourceBuffer.limit()
+        val byteOrder = sourceBuffer.order()
+
+        sourceBuffer.rewind()
+        destinationBuffer.order(byteOrder)
+        destinationBuffer.put(sourceBuffer)
+        destinationBuffer.position(position)
+        destinationBuffer.limit(limit)
+
+        return destinationBuffer
+    }
 }
 
 /**
