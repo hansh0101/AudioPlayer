@@ -55,7 +55,7 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
             .setBufferSizeInBytes(bufferSizeInBytes)
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
-            .apply { play() }
+        start()
     }
 
     /**
@@ -66,6 +66,14 @@ class AudioTrackOutputUnit : AudioOutputUnit() {
             stop()
             release()
         }
+    }
+
+    override fun start() {
+        audioTrack.play()
+    }
+
+    override fun pause() {
+        audioTrack.pause()
     }
 
     /**

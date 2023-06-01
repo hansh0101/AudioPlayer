@@ -8,7 +8,7 @@
  * @param isFloat : 샘플의 AudioFormat이 Float인지 나타내는 bool 변수
  */
 AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, bool isFloat)
-        : mChannelCount(channelCount), mSampleRate(sampleRate), mBitDepth(bitDepth) {
+        : mChannelCount(channelCount), mSampleRate(sampleRate) {
     oboe::AudioStreamBuilder builder;
 
     setFormat(bitDepth, isFloat);
@@ -33,11 +33,6 @@ AudioSinkUnit::AudioSinkUnit(int channelCount, int sampleRate, int bitDepth, boo
     if (result != oboe::Result::OK) {
         LOGE("Error occurred when open stream : %s", oboe::convertToText(result));
     }
-
-    result = mStream->requestStart();
-    if (result != oboe::Result::OK) {
-        LOGE("Error occurred when open stream : %s", oboe::convertToText(result));
-    }
 }
 
 /**
@@ -54,9 +49,23 @@ AudioSinkUnit::~AudioSinkUnit() {
  * @param size : 재생할 오디오 데이터의 크기
  */
 void AudioSinkUnit::requestPlayback(void *audioDataPtr, int32_t size) {
-    LOGI("%p : address in requestPlayback()", audioDataPtr);
+//    LOGI("%p : address in requestPlayback()", audioDataPtr);
     AudioDataInfo audioDataInfo = AudioDataInfo{audioDataPtr, size};
     q.push(audioDataInfo);
+}
+
+/**
+ * 오디오 재생 시작을 요청한다.
+ */
+void AudioSinkUnit::requestStart() {
+    mStream->requestStart();
+}
+
+/**
+ * 오디오 재생 중지를 요청한다.
+ */
+void AudioSinkUnit::requestPause() {
+    mStream->requestPause();
 }
 
 /**
@@ -86,10 +95,8 @@ AudioSinkUnit::onAudioReady(oboe::AudioStream *audioStream, void *audioData, int
         AudioDataInfo audioDataInfo = q.front();
         q.pop();
 
-        LOGI("%p : address in onAudioReady()", audioDataInfo.audioDataPtr);
+//        LOGI("%p : address in onAudioReady()", audioDataInfo.audioDataPtr);
         memcpy(audioData, audioDataInfo.audioDataPtr, audioDataInfo.size);
-    } else {
-        memset(audioData, 0, numFrames * 2 /* mChannelCount */ * 2 /* mBitDepth / 8 */);
     }
 
     return oboe::DataCallbackResult::Continue;

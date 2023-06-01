@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 /**
  * 오디오 파일 재생을 위해 출력을 처리하는 객체.
  */
-abstract class AudioOutputUnit() {
+abstract class AudioOutputUnit {
     // ---------------------------------------------------------------------------------------------
     // AudioOutputUnit의 클래스 변수.
     /**
@@ -25,6 +25,16 @@ abstract class AudioOutputUnit() {
      * AudioOutputUnit 객체 사용을 마친 후 리소스를 정리한다.
      */
     abstract fun release()
+
+    /**
+     * AudioOutputUnit 객체의 오디오 재생을 시작한다.
+     */
+    abstract fun start()
+
+    /**
+     * AudioOutputUnit 객체의 오디오 재생을 중지한다.
+     */
+    abstract fun pause()
 
     /**
      * outputBuffer에 들어있는 size 크기의 오디오 데이터를 소리로 출력한다.

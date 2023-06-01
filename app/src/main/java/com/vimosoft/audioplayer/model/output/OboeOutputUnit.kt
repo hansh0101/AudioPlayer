@@ -48,6 +48,7 @@ class OboeOutputUnit : AudioOutputUnit() {
             }
 
             oboeStreamAddress = initialize(channelCount, sampleRate, bitDepth, isFloat)
+            start()
         }
     }
 
@@ -58,6 +59,24 @@ class OboeOutputUnit : AudioOutputUnit() {
         if (oboeStreamAddress != 0L) {
             release(oboeStreamAddress)
             oboeStreamAddress = 0L
+        }
+    }
+
+    /**
+     * 오디오 재생을 시작한다.
+     */
+    override fun start() {
+        if (oboeStreamAddress != 0L) {
+            requestStart(oboeStreamAddress)
+        }
+    }
+
+    /**
+     * 오디오 재생을 중지한다.
+     */
+    override fun pause() {
+        if (oboeStreamAddress != 0L) {
+            requestPause(oboeStreamAddress)
         }
     }
 
@@ -97,6 +116,16 @@ class OboeOutputUnit : AudioOutputUnit() {
         outputByteArray: ByteArray,
         size: Int
     )
+
+    /**
+     * JNI - AudioSinkUnit 객체의 오디오 재생 시작을 요청한다.
+     */
+    private external fun requestStart(oboeStreamAddress: Long)
+
+    /**
+     * JNI - AudioSinkUnit 객체의 오디오 재생 중지를 요청한다.
+     */
+    private external fun requestPause(oboeStreamAddress: Long)
 
     companion object {
         init {

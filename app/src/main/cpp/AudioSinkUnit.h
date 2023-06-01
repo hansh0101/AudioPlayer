@@ -36,6 +36,16 @@ public:
      */
     void requestPlayback(void *audioDataPtr, int32_t size);
 
+    /**
+     * 오디오 재생 시작을 요청한다.
+     */
+    void requestStart();
+
+    /**
+     * 오디오 재생 중지를 요청한다.
+     */
+    void requestPause();
+
     oboe::DataCallbackResult
     onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override;
 
@@ -54,8 +64,6 @@ private:
      * 1초당 재생할 샘플 수.
      */
     int mSampleRate;
-
-    int mBitDepth;
 
     /**
      * 출력 데이터의 AudioFormat.

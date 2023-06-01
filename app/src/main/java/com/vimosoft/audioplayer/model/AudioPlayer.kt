@@ -142,6 +142,7 @@ class AudioPlayer(
         if (audioThread == null || audioThread?.isInterrupted == true) {
             startAudioThread()
         }
+        audioOutputUnit.start()
     }
 
     /**
@@ -150,6 +151,7 @@ class AudioPlayer(
     fun pause() {
         audioThread?.interrupt()
         audioThread = null
+        audioOutputUnit.pause()
         onPause()
     }
 
@@ -185,11 +187,14 @@ class AudioPlayer(
 
                 // Input, Output data 모두 EOS에 도달했다면 다음 트랙 재생을 준비한다.
                 if (isInputEOSReached && isOutputEOSReached) {
-                    prepareNextTrack()
-                    isInputEOSReached = false
-                    isOutputEOSReached = false
+                    break
+
+//                    prepareNextTrack()
+//                    isInputEOSReached = false
+//                    isOutputEOSReached = false
                 }
             }
+            onPause()
         }.apply { start() }
     }
 
@@ -235,10 +240,8 @@ class AudioPlayer(
             audioDecodeProcessor.giveBackOutputBuffer(outputBufferInfo.bufferIndex, false)
             audioOutputUnit.outputAudio(buffer, size)
 
-            // Thread가 interrupt되지 않았다면 onPlay 콜백을 통해 현재 재생 위치를 전달한다.
-            if (!Thread.currentThread().isInterrupted) {
-                onPlay((presentationTimeUs / 1000 / 1000).toInt())
-            }
+            // onPlay 콜백을 통해 현재 재생 위치를 전달한다.
+            onPlay((presentationTimeUs / 1000 / 1000).toInt())
 
             // 디코딩된 오디오 데이터가 EOS에 도달했는지에 해당하는 OutputBufferInfo.isEOS 값을 반환한다.
             return outputBufferInfo.isEOS
@@ -247,15 +250,15 @@ class AudioPlayer(
         return false
     }
 
-    /**
-     * 다음 트랙 재생을 준비한다.
-     */
-    private fun prepareNextTrack() {
-        audioInputUnit.release()
-        audioDecodeProcessor.release()
-        audioOutputUnit.release()
-        prepare()
-    }
+//    /**
+//     * 다음 트랙 재생을 준비한다.
+//     */
+//    private fun prepareNextTrack() {
+//        audioInputUnit.release()
+//        audioDecodeProcessor.release()
+//        audioOutputUnit.release()
+//        prepare()
+//    }
 
     companion object {
         const val MEDIA_EXTRACTOR = 1
