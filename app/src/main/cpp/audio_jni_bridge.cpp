@@ -33,10 +33,15 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_vimosoft_audioplayer_model_output_OboeOutputUnit_requestPlayback(JNIEnv *env, jobject,
                                                                           jlong audio_sink,
                                                                           jbyteArray output_byte_array,
+//                                                                          jobject output_buffer,
                                                                           jint size) {
     auto *audioSink = (AudioSinkUnit *) audio_sink;
+
     jbyte *elements = env->GetByteArrayElements(output_byte_array, nullptr);
     void *audioDataPtr = static_cast<void *>(elements);
+
+//    void *audioDataPtr = env->GetDirectBufferAddress(output_buffer);
+
     audioSink->requestPlayback(audioDataPtr, size);
 }
 

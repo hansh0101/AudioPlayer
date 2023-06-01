@@ -2,6 +2,7 @@ package com.vimosoft.audioplayer.model.output
 
 import android.media.AudioFormat
 import android.media.MediaFormat
+import timber.log.Timber
 import java.nio.ByteBuffer
 
 /**
@@ -88,6 +89,8 @@ class OboeOutputUnit : AudioOutputUnit() {
             val outputByteArray = ByteArray(size)
             outputBuffer.get(outputByteArray)
             requestPlayback(oboeStreamAddress, outputByteArray, size)
+
+//            requestPlayback(oboeStreamAddress, outputBuffer, size)
         }
     }
 
@@ -114,6 +117,7 @@ class OboeOutputUnit : AudioOutputUnit() {
     private external fun requestPlayback(
         oboeStreamAddress: Long,
         outputByteArray: ByteArray,
+//        outputBuffer: ByteBuffer,
         size: Int
     )
 
